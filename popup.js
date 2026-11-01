@@ -1,4 +1,4 @@
-// DoneDing v7.0 — Popup Controller (Per-Session Sound Picker, Output Gain on Sessions, OS Alert Tester)
+// DoneDing v8.0 — Popup Controller
 const DEFAULT_SETTINGS = {
     enabled: true,
     theme: 'carbon',
@@ -50,8 +50,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const enabledToggle = document.getElementById('enabledToggle');
     const themeToggleBtn = document.getElementById('themeToggleBtn');
-    const testSystemNotifBtn = document.getElementById('testSystemNotifBtn');
-    const testOsBtnLabel = document.getElementById('testOsBtnLabel');
     const volumeSlider = document.getElementById('volumeSlider');
     const volumeLabel = document.getElementById('volumeLabel');
 
@@ -71,7 +69,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const topNotifSite = document.getElementById('topNotifSite');
     const topNotifTime = document.getElementById('topNotifTime');
     const topNotifSound = document.getElementById('topNotifSound');
-    const topNotifReplayBtn = document.getElementById('topNotifReplayBtn');
 
     const multiTabList = document.getElementById('multiTabList');
     const recentHistoryList = document.getElementById('recentHistoryList');
@@ -127,7 +124,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const totalDone = currentSettings.stats?.totalCompletions || 0;
     footerCompletionsCount.textContent = `${totalDone} completed`;
 
-    // Play sound cleanly in popup (and stop any previous oscillator so sounds never mix!)
     function auditionSound(presetKey) {
         if (window.AIChimeAudio) {
             window.AIChimeAudio.playChime(presetKey, Number(volumeSlider.value) / 100);
@@ -153,15 +149,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             topNotifSite.textContent = 'Monitoring open AI sessions';
             topNotifTime.textContent = 'Live';
-            topNotifSound.textContent = 'Pro Chime';
+            topNotifSound.textContent = currentSettings.soundEnabled !== false ? 'Pro Chime' : 'Sound Muted';
             topBarLastSound = 'pro_chime';
         }
     }
     updateTopNotificationBar(null);
-
-    topNotifReplayBtn.addEventListener('click', () => {
-        auditionSound(topBarLastSound);
-    });
 
     function updateStatusIndicators() {
         const isOn = enabledToggle.checked;
@@ -172,51 +164,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     updateStatusIndicators();
 
-    testSystemNotifBtn.addEventListener('click', () => {
-        auditionSound(topBarLastSound);
-        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-            chrome.runtime.sendMessage({
-                type: 'TEST_SYSTEM_NOTIFICATION',
-                soundPreset: topBarLastSound
-            }, (resp) => {
-                if (testOsBtnLabel) {
-                    testOsBtnLabel.textContent = (resp && resp.ok) ? 'Sent to OS ✓' : 'Alert Sent ✓';
-                    setTimeout(() => {
-                        testOsBtnLabel.textContent = 'Test Computer Alert';
-                    }, 2000);
-                }
-            });
-        }
-    });
-
     enabledToggle.addEventListener('change', () => {
         const enabled = enabledToggle.checked;
+        currentSettings.enabled = enabled;
         updateStatusIndicators();
         if (hasChromeStorage) chrome.storage.sync.set({ enabled });
     });
 
     volumeSlider.addEventListener('input', () => {
         volumeLabel.textContent = `${volumeSlider.value}%`;
-        if (hasChromeStorage) chrome.storage.sync.set({ volume: Number(volumeSlider.value) / 100 });
+        currentSettings.volume = Number(volumeSlider.value) / 100;
+        if (hasChromeStorage) chrome.storage.sync.set({ volume: currentSettings.volume });
     });
 
     volumeSlider.addEventListener('change', () => {
-        auditionSound(topBarLastSound);
+        if (currentSettings.soundEnabled !== false) {
+            auditionSound(topBarLastSound);
+        }
     });
 
     desktopNotificationToggle.addEventListener('change', () => {
+        currentSettings.desktopNotification = desktopNotificationToggle.checked;
         if (hasChromeStorage) chrome.storage.sync.set({ desktopNotification: desktopNotificationToggle.checked });
     });
 
     inPageTopBannerToggle.addEventListener('change', () => {
+        currentSettings.inPageTopBanner = inPageTopBannerToggle.checked;
         if (hasChromeStorage) chrome.storage.sync.set({ inPageTopBanner: inPageTopBannerToggle.checked });
     });
 
     soundEnabledToggle.addEventListener('change', () => {
+        currentSettings.soundEnabled = soundEnabledToggle.checked;
         if (hasChromeStorage) chrome.storage.sync.set({ soundEnabled: soundEnabledToggle.checked });
     });
 
     onlyWhenUnfocusedToggle.addEventListener('change', () => {
+        currentSettings.onlyWhenUnfocused = onlyWhenUnfocusedToggle.checked;
         if (hasChromeStorage) chrome.storage.sync.set({ onlyWhenUnfocused: onlyWhenUnfocusedToggle.checked });
     });
 
@@ -248,10 +231,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return currentSettings.soundPreset || 'pro_chime';
     }
 
-    // Render all open AI tabs across Chrome:
-    // - No "Idle" text badge (clean row with plenty of space)
-    // - Bigger sound selector with down-arrow chevron
-    // - Per-session checkbox that reliably mutes sound, top-bar banner, and OS notification when unchecked
     function renderOpenTabs(tabs) {
         liveTabsCache = Array.isArray(tabs) ? tabs : [];
         const openCount = liveTabsCache.length;
@@ -344,7 +323,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
         }).join('');
 
-        // Per-session Check/Uncheck mute listener
         multiTabList.querySelectorAll('.session-mute-check').forEach(chk => {
             chk.addEventListener('change', () => {
                 const host = chk.getAttribute('data-host');
@@ -367,7 +345,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
 
-        // Per-session Sound Selector listener (saves to BOTH tabSounds[tabId] and siteSounds[platformId] & auditions cleanly!)
         multiTabList.querySelectorAll('.site-sound-select').forEach(sel => {
             sel.addEventListener('change', () => {
                 const tabId = sel.getAttribute('data-tab-id');
@@ -392,11 +369,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 topBarLastSound = chosen;
                 topNotifAccent.style.backgroundColor = bcolor;
                 topNotifSite.textContent = `${pname} sound updated`;
-                topNotifTime.textContent = 'Preview';
+                topNotifTime.textContent = 'Saved';
                 topNotifSound.textContent = soundObj ? soundObj.label : chosen;
                 topNotifBar.classList.add('is-fresh');
 
-                // Play ONLY the newly selected sound cleanly in the popup
                 auditionSound(chosen);
             });
         });
@@ -456,6 +432,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     updateTopNotificationBar(msg.banner);
                 }
             }
+            return false;
         });
     }
 

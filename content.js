@@ -1,15 +1,13 @@
-// DoneDing v7.0 — Content Script with Auto-Cleanup, Central Audio Delegation & Redesigned Top-Bar Alert
+// DoneDing v8.0 — Content Script for 27 AI Chat Platforms
 (function() {
     'use strict';
 
-    // Clean up any previous DoneDing content script instance in this tab (prevents duplicate listeners after extension reload)
     window.dispatchEvent(new CustomEvent('__doneding_cleanup__'));
 
     let isActiveInstance = true;
     let pollIntervalId = null;
     let mutationObserver = null;
     let titleFlashTimer = null;
-    let topBannerTimer = null;
     let stopDebounceTimer = null;
 
     window.addEventListener('__doneding_cleanup__', () => {
@@ -17,7 +15,6 @@
         if (pollIntervalId) clearInterval(pollIntervalId);
         if (mutationObserver) mutationObserver.disconnect();
         if (titleFlashTimer) clearInterval(titleFlashTimer);
-        if (topBannerTimer) clearTimeout(topBannerTimer);
         if (stopDebounceTimer) clearTimeout(stopDebounceTimer);
     }, { once: true });
 
@@ -217,96 +214,6 @@
         return getPlatformInfo().check();
     }
 
-    // Redesigned Tactile Studio Top-Bar Notification Pill (inside webpage viewport)
-    function showInPageTopBanner(platform, elapsedMs, soundKey, soundLabel, volume) {
-        const elapsedSec = (elapsedMs / 1000).toFixed(1);
-
-        let bar = document.getElementById('doneding-top-banner');
-        if (!bar) {
-            bar = document.createElement('div');
-            bar.id = 'doneding-top-banner';
-            bar.style.cssText = [
-                'position: fixed',
-                'top: 14px',
-                'left: 50%',
-                'transform: translateX(-50%) translateY(-14px) scale(0.98)',
-                'z-index: 2147483647',
-                'background: #161514',
-                'color: #F2EFE9',
-                'border: 1px solid #33312E',
-                'border-radius: 10px',
-                'padding: 8px 10px 8px 12px',
-                'font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif',
-                'font-size: 12.5px',
-                'line-height: 1.3',
-                'display: flex',
-                'align-items: center',
-                'gap: 12px',
-                'box-shadow: 0 12px 32px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.3)',
-                'opacity: 0',
-                'transition: opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1), transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)'
-            ].join(';');
-            document.documentElement.appendChild(bar);
-        }
-
-        bar.innerHTML = `
-            <div style="display:flex;align-items:center;gap:9px;">
-              <span style="width:10px;height:10px;border-radius:3px;background:${platform.color};display:inline-block;flex-shrink:0;"></span>
-              <div style="display:flex;flex-direction:column;gap:1px;">
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <span style="font-weight:650;color:#F2EFE9;letter-spacing:-0.01em;">${platform.name} completed</span>
-                  <span style="font-size:11px;font-variant-numeric:tabular-nums;color:#26B860;background:rgba(38,184,96,0.14);padding:1px 6px;border-radius:4px;font-weight:600;">${elapsedSec}s</span>
-                </div>
-                <div style="font-size:11px;color:#ABA59B;display:flex;align-items:center;gap:5px;">
-                  <span>DoneDing</span>
-                  <span>·</span>
-                  <span style="color:#E55A2B;font-weight:600;">♪ ${soundLabel}</span>
-                </div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;padding-left:8px;border-left:1px solid #2B2A27;">
-              <button id="doneding-banner-replay" style="background:#242320;color:#F2EFE9;border:1px solid #3E3C38;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
-                <span>♪ Replay</span>
-              </button>
-              <button id="doneding-banner-close" title="Dismiss" style="background:transparent;color:#8A847A;border:none;border-radius:5px;padding:3px 5px;font-size:13px;cursor:pointer;line-height:1;">✕</button>
-            </div>
-        `;
-
-        const replayBtn = bar.querySelector('#doneding-banner-replay');
-        if (replayBtn) {
-            replayBtn.onclick = (e) => {
-                e.stopPropagation();
-                chrome.runtime.sendMessage({
-                    type: 'PLAY_SOUND_CENTRAL',
-                    preset: soundKey,
-                    volume: volume ?? 0.85
-                });
-            };
-        }
-
-        const closeBtn = bar.querySelector('#doneding-banner-close');
-        if (closeBtn) {
-            closeBtn.onclick = (e) => {
-                e.stopPropagation();
-                bar.style.opacity = '0';
-                bar.style.transform = 'translateX(-50%) translateY(-14px) scale(0.98)';
-            };
-        }
-
-        requestAnimationFrame(() => {
-            bar.style.opacity = '1';
-            bar.style.transform = 'translateX(-50%) translateY(0) scale(1)';
-        });
-
-        if (topBannerTimer) clearTimeout(topBannerTimer);
-        topBannerTimer = setTimeout(() => {
-            if (bar) {
-                bar.style.opacity = '0';
-                bar.style.transform = 'translateX(-50%) translateY(-14px) scale(0.98)';
-            }
-        }, 5500);
-    }
-
     let originalTitle = null;
 
     function triggerTitleAlert() {
@@ -379,24 +286,13 @@
                     elapsedMs,
                     tabFocused
                 }, (resp) => {
-                    if (chrome.runtime.lastError || !resp) return;
-                    // If session is unchecked/muted, do NOT show banner or flash title!
-                    if (resp.muted) return;
+                    if (chrome.runtime.lastError || !resp || resp.muted) return;
 
-                    // If central offscreen audio couldn't play for any reason, play once in-page as backup
-                    if (!resp.played && window.AIChimeAudio && resp.soundPreset) {
+                    // Only play backup audio if soundEnabled is true AND central offscreen audio didn't play
+                    if (resp.soundEnabled && !resp.played && window.AIChimeAudio && resp.soundPreset) {
                         window.AIChimeAudio.playChime(resp.soundPreset, resp.volume ?? 0.85);
                     }
 
-                    if (resp.showBanner) {
-                        showInPageTopBanner(
-                            platform,
-                            elapsedMs,
-                            resp.soundPreset || 'pro_chime',
-                            resp.soundLabel || 'Pro Chime',
-                            resp.volume ?? 0.85
-                        );
-                    }
                     triggerTitleAlert();
                 });
             } catch (e) {}
@@ -453,7 +349,7 @@
 
     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
         chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-            if (!isActiveInstance) return;
+            if (!isActiveInstance) return false;
             if (msg && msg.type === 'GET_TAB_STATUS') {
                 const platform = getPlatformInfo();
                 sendResponse({
@@ -466,8 +362,9 @@
                     isGenerating: checkIsGenerating(),
                     generationStartTime: isGenerating ? generationStartTime : null
                 });
-                return true;
+                return false;
             }
+            return false;
         });
     }
 })();

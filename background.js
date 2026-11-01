@@ -1,4 +1,6 @@
-// DoneDing v7.0 — Central Background Controller (Single Audio Source, Per-Session Mute & Sound, Native OS Alerts)
+// DoneDing v8.0 — Central Background Service Worker
+const ICON_DATA_URI = "data:image/png;base64,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";
+
 const DEFAULT_SETTINGS = {
     enabled: true,
     theme: 'carbon',
@@ -186,6 +188,7 @@ function broadcastRegistryUpdate(extraBanner = null) {
         return (b.lastUpdated || 0) - (a.lastUpdated || 0);
     });
     chrome.runtime.sendMessage({
+        target: 'popup',
         type: 'TAB_REGISTRY_UPDATED',
         tabs: tabsList,
         banner: extraBanner
@@ -213,82 +216,188 @@ async function ensureOffscreenDocument() {
 async function playChimeCentral(preset, volume) {
     try {
         await ensureOffscreenDocument();
-        await chrome.runtime.sendMessage({
+        const res = await chrome.runtime.sendMessage({
+            target: 'offscreen',
             type: 'OFFSCREEN_PLAY_CHIME',
             preset,
             volume
         });
-        return true;
+        return Boolean(res && res.ok);
     } catch (e) {
         return false;
     }
 }
 
-// Reliable Native Computer System Notification helper (Chrome Notifications API + ServiceWorker Registration fallback)
-async function showComputerSystemNotification(title, message, targetTabId = null, targetWindowId = null) {
-    const iconUrl = chrome.runtime.getURL('icons/icon128.png');
-    const notifId = 'doneding-os-' + Date.now() + '-' + (targetTabId || 0);
+// Self-contained function injected into WHICHEVER browser tab the user is currently viewing (<all_urls>)
+// Renders the DoneDing Top-Bar Notification Banner across the whole browser (NO Replay button!)
+function injectBrowserWideTopBanner(bannerPayload) {
+    try {
+        const existing = document.getElementById('doneding-global-top-banner');
+        if (existing) existing.remove();
 
-    return new Promise((resolve) => {
-        try {
-            chrome.notifications.create(notifId, {
-                type: 'basic',
-                iconUrl: iconUrl,
-                title: title,
-                message: message,
-                priority: 2,
-                requireInteraction: false,
-                silent: false
-            }, (createdId) => {
-                if (chrome.runtime.lastError || !createdId) {
-                    // Fallback to ServiceWorker native OS notification if chrome.notifications had an issue
-                    if (self.registration && self.registration.showNotification) {
-                        self.registration.showNotification(title, {
-                            body: message,
-                            icon: iconUrl,
-                            tag: notifId
-                        }).then(() => resolve(true)).catch(() => resolve(false));
-                    } else {
-                        resolve(false);
-                    }
-                    return;
-                }
+        const bar = document.createElement('div');
+        bar.id = 'doneding-global-top-banner';
+        bar.style.cssText = [
+            'position: fixed',
+            'top: 14px',
+            'left: 50%',
+            'transform: translateX(-50%) translateY(-14px) scale(0.98)',
+            'z-index: 2147483647',
+            'background: #161514',
+            'color: #F2EFE9',
+            'border: 1px solid #3E3C38',
+            'border-radius: 10px',
+            'padding: 9px 12px 9px 15px',
+            'font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif',
+            'font-size: 12.5px',
+            'line-height: 1.35',
+            'display: flex',
+            'align-items: center',
+            'gap: 12px',
+            'box-shadow: 0 14px 34px rgba(0,0,0,0.48), 0 2px 8px rgba(0,0,0,0.32)',
+            'opacity: 0',
+            'cursor: pointer',
+            'transition: opacity 0.2s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s cubic-bezier(0.22, 1, 0.36, 1)'
+        ].join(';');
 
-                if (targetTabId) {
-                    const clickHandler = (clickedId) => {
-                        if (clickedId === createdId) {
-                            chrome.tabs.update(targetTabId, { active: true });
-                            if (targetWindowId) chrome.windows.update(targetWindowId, { focused: true });
-                            const entry = tabRegistry.get(targetTabId);
-                            if (entry) {
-                                entry.unreadDone = false;
-                                tabRegistry.set(targetTabId, entry);
-                                updateToolbarBadge();
-                                broadcastRegistryUpdate();
-                            }
-                            chrome.notifications.clear(createdId);
-                            chrome.notifications.onClicked.removeListener(clickHandler);
-                        }
-                    };
-                    chrome.notifications.onClicked.addListener(clickHandler);
+        bar.innerHTML = `
+            <span style="position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:10px 0 0 10px;background:${bannerPayload.brandColor || '#E55A2B'};"></span>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <div style="display:flex;align-items:center;gap:7px;">
+                  <span style="font-weight:650;color:#F2EFE9;letter-spacing:-0.01em;">${bannerPayload.platformName} finished</span>
+                  <span style="font-size:11px;font-variant-numeric:tabular-nums;color:#26B860;background:rgba(38,184,96,0.15);padding:1px 6px;border-radius:4px;font-weight:600;">${bannerPayload.elapsedSec}s</span>
+                </div>
+                <div style="font-size:11px;color:#ABA59B;display:flex;align-items:center;gap:6px;">
+                  <span style="color:#E55A2B;font-weight:600;">♪ ${bannerPayload.soundDisplay}</span>
+                  <span>·</span>
+                  <span style="max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${bannerPayload.title || 'Response ready'}</span>
+                </div>
+              </div>
+            </div>
+            <button id="doneding-global-banner-close" title="Dismiss" style="background:transparent;color:#8A847A;border:none;border-radius:5px;padding:3px 6px;font-size:13px;cursor:pointer;line-height:1;margin-left:4px;">✕</button>
+        `;
+
+        // Clicking the banner switches straight to the finished AI tab!
+        bar.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'doneding-global-banner-close') return;
+            bar.style.opacity = '0';
+            bar.style.transform = 'translateX(-50%) translateY(-14px) scale(0.98)';
+            try {
+                if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage && bannerPayload.sourceTabId) {
+                    chrome.runtime.sendMessage({
+                        type: 'FOCUS_AI_TAB',
+                        tabId: bannerPayload.sourceTabId,
+                        windowId: bannerPayload.sourceWindowId
+                    });
                 }
-                resolve(true);
+            } catch (err) {}
+        });
+
+        const closeBtn = bar.querySelector('#doneding-global-banner-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                bar.style.opacity = '0';
+                bar.style.transform = 'translateX(-50%) translateY(-14px) scale(0.98)';
+                setTimeout(() => bar.remove(), 220);
             });
-        } catch (err) {
-            if (self.registration && self.registration.showNotification) {
-                self.registration.showNotification(title, {
-                    body: message,
-                    icon: iconUrl
-                }).then(() => resolve(true)).catch(() => resolve(false));
-            } else {
-                resolve(false);
-            }
         }
-    });
+
+        document.documentElement.appendChild(bar);
+        requestAnimationFrame(() => {
+            bar.style.opacity = '1';
+            bar.style.transform = 'translateX(-50%) translateY(0) scale(1)';
+        });
+
+        setTimeout(() => {
+            if (bar && bar.parentNode) {
+                bar.style.opacity = '0';
+                bar.style.transform = 'translateX(-50%) translateY(-14px) scale(0.98)';
+                setTimeout(() => { if (bar.parentNode) bar.remove(); }, 250);
+            }
+        }, 6000);
+    } catch (e) {}
+}
+
+// Broadcasts the Top-Bar Notification Banner to the currently active tab in EVERY open Chrome window (plus the AI tab)
+async function broadcastTopBannerAcrossBrowser(bannerPayload) {
+    try {
+        const activeTabs = await chrome.tabs.query({ active: true });
+        const targetTabIds = new Set(activeTabs.map(t => t.id).filter(Boolean));
+        if (bannerPayload.sourceTabId) {
+            targetTabIds.add(bannerPayload.sourceTabId);
+        }
+
+        await Promise.allSettled(Array.from(targetTabIds).map(async (tid) => {
+            try {
+                await chrome.scripting.executeScript({
+                    target: { tabId: tid },
+                    func: injectBrowserWideTopBanner,
+                    args: [bannerPayload]
+                });
+            } catch (e) {
+                // Tab might be chrome:// or restricted page; ignore safely
+            }
+        }));
+    } catch (e) {}
+}
+
+// Reliable Computer System Notification (OS Banner) using Base64 Data URI icon + ServiceWorker fallback
+function triggerComputerSystemNotification(title, message, targetTabId = null, targetWindowId = null) {
+    const notifId = 'doneding-os-' + Date.now() + '-' + (targetTabId || 0);
+    try {
+        chrome.notifications.create(notifId, {
+            type: 'basic',
+            iconUrl: ICON_DATA_URI,
+            title: title,
+            message: message,
+            priority: 2,
+            requireInteraction: false,
+            silent: false
+        }, (createdId) => {
+            if (chrome.runtime.lastError || !createdId) {
+                if (self.registration && self.registration.showNotification) {
+                    self.registration.showNotification(title, {
+                        body: message,
+                        icon: ICON_DATA_URI,
+                        tag: notifId
+                    }).catch(() => {});
+                }
+                return;
+            }
+
+            if (targetTabId) {
+                const clickHandler = (clickedId) => {
+                    if (clickedId === createdId) {
+                        chrome.tabs.update(targetTabId, { active: true });
+                        if (targetWindowId) chrome.windows.update(targetWindowId, { focused: true });
+                        const entry = tabRegistry.get(targetTabId);
+                        if (entry) {
+                            entry.unreadDone = false;
+                            tabRegistry.set(targetTabId, entry);
+                            updateToolbarBadge();
+                            broadcastRegistryUpdate();
+                        }
+                        chrome.notifications.clear(createdId);
+                        chrome.notifications.onClicked.removeListener(clickHandler);
+                    }
+                };
+                chrome.notifications.onClicked.addListener(clickHandler);
+            }
+        });
+    } catch (err) {
+        if (self.registration && self.registration.showNotification) {
+            self.registration.showNotification(title, {
+                body: message,
+                icon: ICON_DATA_URI
+            }).catch(() => {});
+        }
+    }
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (!message || !message.type) return;
+    if (!message || !message.type || message.target === 'offscreen') return false;
 
     if (message.type === 'TAB_STATE_SYNC') {
         if (sender && sender.tab && sender.tab.id) {
@@ -316,7 +425,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             broadcastRegistryUpdate();
         }
         sendResponse({ ok: true });
-        return true;
+        return false;
     }
 
     if (message.type === 'GET_ALL_AI_TABS') {
@@ -347,18 +456,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true;
     }
 
-    if (message.type === 'TEST_SYSTEM_NOTIFICATION') {
-        const soundKey = message.soundPreset || 'pro_chime';
-        const soundLabel = SOUND_LABELS[soundKey] || 'Pro Chime';
-        showComputerSystemNotification(
-            'DoneDing · Computer System Notification',
-            `System notifications are active on your laptop · Sound: ${soundLabel}`
-        ).then((ok) => {
-            sendResponse({ ok });
-        });
-        return true;
-    }
-
     if (message.type === 'PLAY_SOUND_CENTRAL') {
         playChimeCentral(message.preset || 'pro_chime', message.volume ?? 0.85)
             .then((ok) => sendResponse({ ok }));
@@ -369,6 +466,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         handleGenerationCompleted(message, sender).then((res) => sendResponse(res));
         return true;
     }
+
+    return false;
 });
 
 async function refreshAllOpenTabs(injectIfMissing = false) {
@@ -447,7 +546,6 @@ async function refreshAllOpenTabs(injectIfMissing = false) {
     });
 }
 
-// Resolves the exact sound assigned to this specific session (tabId first, then platformId, then default)
 function resolveSessionSound(tabId, platformId, data) {
     if (tabId && data.tabSounds && data.tabSounds[tabId]) {
         return data.tabSounds[tabId];
@@ -463,10 +561,11 @@ function resolveSessionSound(tabId, platformId, data) {
 async function handleGenerationCompleted(message, sender) {
     const data = await chrome.storage.sync.get(DEFAULT_SETTINGS);
     const tabId = sender?.tab?.id;
+    const windowId = sender?.tab?.windowId;
     const hostname = message.hostname || '';
     const platformId = message.platformId || 'generic';
 
-    // 1. Check if master switch is off OR if this session/site was unchecked by the user!
+    // 1. Check if master switch is off OR if this specific session/site is unchecked in Open Sessions
     const isSessionMuted = Boolean(
         !data.enabled ||
         (tabId && data.mutedTabs && data.mutedTabs[tabId]) ||
@@ -486,14 +585,10 @@ async function handleGenerationCompleted(message, sender) {
             updateToolbarBadge();
             broadcastRegistryUpdate();
         }
-        return {
-            played: false,
-            muted: true,
-            showBanner: false
-        };
+        return { played: false, muted: true };
     }
 
-    // 2. Check if "Background tabs only" is enabled and user is already focused on that tab
+    // 2. Check if "Background tabs only" is enabled and user is already viewing that AI tab
     if (data.onlyWhenUnfocused && message.tabFocused) {
         if (tabId) {
             const prev = tabRegistry.get(tabId) || {};
@@ -507,23 +602,22 @@ async function handleGenerationCompleted(message, sender) {
             updateToolbarBadge();
             broadcastRegistryUpdate();
         }
-        return {
-            played: false,
-            muted: true,
-            showBanner: false
-        };
+        return { played: false, muted: true };
     }
 
-    // 3. Resolve the exact sound assigned to this session in Open Sessions
+    // 3. Resolve the sound assigned to this session
     const chosenSound = resolveSessionSound(tabId, platformId, data);
     const chosenSoundLabel = SOUND_LABELS[chosenSound] || 'Pro Chime';
+    const isSoundEnabled = data.soundEnabled !== false;
+    const soundDisplayText = isSoundEnabled ? chosenSoundLabel : `${chosenSoundLabel} (Sound Off)`;
+    const elapsedSec = ((message.elapsedMs || 0) / 1000).toFixed(1);
 
     if (tabId) {
         const prev = tabRegistry.get(tabId) || {};
         tabRegistry.set(tabId, {
             ...prev,
             tabId,
-            windowId: sender.tab.windowId,
+            windowId,
             platformId,
             platformName: message.platformName || prev.platformName || 'AI Chat',
             brandColor: message.brandColor || prev.brandColor || '#E55A2B',
@@ -541,23 +635,17 @@ async function handleGenerationCompleted(message, sender) {
         updateToolbarBadge();
     }
 
-    // 4. Play ONLY ONCE via central Offscreen Audio player (so two sounds never mix!)
-    let playedCentral = false;
-    if (data.soundEnabled !== false) {
-        playedCentral = await playChimeCentral(chosenSound, data.volume ?? 0.85);
-    }
-
-    // 5. Save stats & recent completions
+    // 4. Save stats & recent completions
     const stats = data.stats || { totalCompletions: 0 };
     stats.totalCompletions = (stats.totalCompletions || 0) + 1;
     stats.lastCompletedSite = message.platformName || hostname;
     stats.lastCompletedSound = chosenSound;
-    stats.lastCompletedSoundLabel = chosenSoundLabel;
+    stats.lastCompletedSoundLabel = soundDisplayText;
     stats.lastCompletedTitle = message.title || 'Conversation';
     stats.lastCompletedElapsedMs = message.elapsedMs || 0;
     stats.lastCompletedAt = Date.now();
     stats.lastCompletedTabId = tabId || null;
-    stats.lastCompletedWindowId = sender?.tab?.windowId || null;
+    stats.lastCompletedWindowId = windowId || null;
 
     const recent = Array.isArray(data.recentCompletions) ? data.recentCompletions : [];
     recent.unshift({
@@ -566,14 +654,13 @@ async function handleGenerationCompleted(message, sender) {
         brandColor: message.brandColor || '#E55A2B',
         title: message.title || 'Conversation',
         soundPreset: chosenSound,
-        soundLabel: chosenSoundLabel,
+        soundLabel: soundDisplayText,
         elapsedMs: message.elapsedMs || 0,
         completedAt: Date.now(),
         tabId: tabId || null,
-        windowId: sender?.tab?.windowId || null
+        windowId: windowId || null
     });
     const trimmedRecent = recent.slice(0, 12);
-
     await chrome.storage.sync.set({ stats, recentCompletions: trimmedRecent });
 
     broadcastRegistryUpdate({
@@ -581,29 +668,48 @@ async function handleGenerationCompleted(message, sender) {
         brandColor: message.brandColor || '#E55A2B',
         title: stats.lastCompletedTitle,
         soundPreset: chosenSound,
-        soundLabel: chosenSoundLabel,
+        soundLabel: soundDisplayText,
         elapsedMs: stats.lastCompletedElapsedMs,
         tabId: tabId || null,
-        windowId: sender?.tab?.windowId || null
+        windowId: windowId || null
     });
 
-    // 6. Native Computer System Notification (OS Banner)
+    // 5. INDEPENDENT TRIGGER A: Top-Bar Notification Banner across the WHOLE browser!
+    // Runs regardless of whether "Play completion sound" is checked or unchecked!
+    if (data.inPageTopBanner !== false) {
+        broadcastTopBannerAcrossBrowser({
+            platformName: message.platformName || hostname || 'AI Chat',
+            brandColor: message.brandColor || '#E55A2B',
+            title: message.title || 'Response finished',
+            elapsedSec,
+            soundDisplay: soundDisplayText,
+            sourceTabId: tabId || null,
+            sourceWindowId: windowId || null
+        });
+    }
+
+    // 6. INDEPENDENT TRIGGER B: Computer System Notification (OS Banner)
     if (data.desktopNotification !== false) {
-        const elapsedSec = ((message.elapsedMs || 0) / 1000).toFixed(1);
-        await showComputerSystemNotification(
+        triggerComputerSystemNotification(
             `DoneDing · ${message.platformName || 'AI Chat'} Ready (${elapsedSec}s)`,
-            `${message.title || 'Response finished'} · Sound: ${chosenSoundLabel}`,
+            `${message.title || 'Response finished'} · ♪ ${soundDisplayText}`,
             tabId || null,
-            sender?.tab?.windowId || null
+            windowId || null
         );
+    }
+
+    // 7. INDEPENDENT TRIGGER C: Play Completion Sound (ONLY if soundEnabled is checked)
+    let playedCentral = false;
+    if (isSoundEnabled) {
+        playedCentral = await playChimeCentral(chosenSound, data.volume ?? 0.85);
     }
 
     return {
         played: playedCentral,
+        soundEnabled: isSoundEnabled,
         muted: false,
-        showBanner: data.inPageTopBanner !== false,
         soundPreset: chosenSound,
-        soundLabel: chosenSoundLabel,
+        soundLabel: soundDisplayText,
         volume: data.volume ?? 0.85
     };
 }

@@ -32,7 +32,7 @@
       </div>
     </header>
 
-    <!-- Redesigned Top-Bar Notification Pill inside Extension -->
+    <!-- Redesigned Top-Bar Notification Card inside Extension (No Replay Button) -->
     <section class="top-alert-wrap">
       <div class="top-alert-card" id="topNotifBar" aria-live="polite">
         <span class="top-alert-accent" id="topNotifAccent" style="background-color: #D97757"></span>
@@ -48,13 +48,6 @@
             <span class="top-alert-sound" id="topNotifSound">Pro Chime</span>
           </div>
         </div>
-        <button id="topNotifReplayBtn" class="top-alert-replay" title="Replay completion sound">
-          <svg class="svg-icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="3 5.5 6.5 5.5 10.5 2.5 10.5 13.5 6.5 10.5 3 10.5"></polygon>
-            <path d="M13 5.5a3.5 3.5 0 0 1 0 5"></path>
-          </svg>
-          <span>Replay</span>
-        </button>
       </div>
     </section>
 
@@ -86,7 +79,7 @@
         <!-- Populated dynamically with open AI tabs across all windows -->
       </div>
 
-      <!-- Output Gain moved directly into Open Sessions -->
+      <!-- Output Gain directly in Open Sessions -->
       <div class="fader-block">
         <div class="fader-header">
           <label for="volumeSlider" class="fader-label">Output gain (Master volume)</label>
@@ -105,32 +98,17 @@
       </div>
     </main>
 
-    <!-- VIEW 2: Trigger Conditions & Computer System Notification -->
+    <!-- VIEW 2: Trigger Conditions (No Test Button) -->
     <main class="view" id="view-alerts" role="tabpanel">
       <div class="section-bar">
         <h2 class="section-heading">Trigger conditions</h2>
-        <button id="testSystemNotifBtn" class="primary-action" title="Send a real test notification to your computer system">
-          <svg class="svg-icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="3" width="12" height="9" rx="1.5"></rect>
-            <path d="M5.5 14h5"></path>
-          </svg>
-          <span id="testOsBtnLabel">Test Computer Alert</span>
-        </button>
       </div>
 
       <div class="rule-stack">
         <label class="rule-row">
           <div class="rule-copy">
-            <span class="rule-title">Computer system notification (OS Banner)</span>
-            <span class="rule-desc">Shows a native Windows / macOS notification banner on your laptop when any checked AI chat finishes</span>
-          </div>
-          <input type="checkbox" id="desktopNotificationToggle" class="rule-check" checked>
-        </label>
-
-        <label class="rule-row">
-          <div class="rule-copy">
-            <span class="rule-title">Top-bar notification banner</span>
-            <span class="rule-desc">Slides down a completion pill at the top of the page with the AI site name and sound played</span>
+            <span class="rule-title">Top-bar notification banner (Whole browser)</span>
+            <span class="rule-desc">Shows the completion banner at the top of whichever browser tab you are currently viewing</span>
           </div>
           <input type="checkbox" id="inPageTopBannerToggle" class="rule-check" checked>
         </label>
@@ -138,15 +116,23 @@
         <label class="rule-row">
           <div class="rule-copy">
             <span class="rule-title">Play completion sound</span>
-            <span class="rule-desc">Plays the sound assigned to each AI tab in Open Sessions</span>
+            <span class="rule-desc">Plays the sound assigned to each AI tab in Open Sessions (independent of visual banners)</span>
           </div>
           <input type="checkbox" id="soundEnabledToggle" class="rule-check" checked>
         </label>
 
         <label class="rule-row">
           <div class="rule-copy">
+            <span class="rule-title">Computer system notification (OS Banner)</span>
+            <span class="rule-desc">Sends a native Windows / macOS notification banner when any checked AI chat finishes</span>
+          </div>
+          <input type="checkbox" id="desktopNotificationToggle" class="rule-check" checked>
+        </label>
+
+        <label class="rule-row">
+          <div class="rule-copy">
             <span class="rule-title">Background tabs only</span>
-            <span class="rule-desc">Only trigger sound and notifications when you are in another tab or app</span>
+            <span class="rule-desc">Only trigger alerts when you are working in another tab or window</span>
           </div>
           <input type="checkbox" id="onlyWhenUnfocusedToggle" class="rule-check">
         </label>

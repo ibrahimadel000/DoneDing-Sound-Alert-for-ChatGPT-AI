@@ -1,4 +1,4 @@
-// DoneDing v7.0 — Single-Voice Web Audio Synthesizer (Zero Overlap / Mixing)
+// DoneDing v8.0 — Single-Voice Web Audio Synthesizer
 (function(global) {
     'use strict';
 
@@ -104,7 +104,6 @@
                 return false;
             }
 
-            // Immediately stop any currently playing oscillators so sounds NEVER mix!
             stopActiveNodes();
 
             const vol = Math.max(0.05, Math.min(1.0, Number(volume) || 0.85));
@@ -116,31 +115,25 @@
             filter.connect(ctx.destination);
 
             if (preset === 'pro_chime') {
-                // F#5 -> B5 signature two-note chime
                 scheduleNote(ctx, filter, 739.99, 0.00, 0.55, baseGain, 2.75, 'sine');
                 scheduleNote(ctx, filter, 987.77, 0.14, 0.60, baseGain, 2.75, 'sine');
             } else if (preset === 'crystal_triad') {
-                // Bright D5 -> F#5 -> D6 arpeggio
                 scheduleNote(ctx, filter, 587.33, 0.00, 0.42, baseGain * 0.9, 2.0, 'sine');
                 scheduleNote(ctx, filter, 739.99, 0.11, 0.42, baseGain * 0.95, 2.0, 'sine');
                 scheduleNote(ctx, filter, 1174.66, 0.22, 0.62, baseGain, 2.0, 'sine');
             } else if (preset === 'warm_marimba') {
-                // Woody low-mid marimba G4 -> D5 -> B5
                 scheduleNote(ctx, filter, 392.00, 0.00, 0.32, baseGain * 1.15, 4.0, 'triangle');
                 scheduleNote(ctx, filter, 587.33, 0.10, 0.36, baseGain * 1.05, 4.0, 'triangle');
                 scheduleNote(ctx, filter, 987.77, 0.20, 0.48, baseGain * 0.95, 4.0, 'sine');
             } else if (preset === 'gentle_zen') {
-                // Deep 528Hz resonant singing bowl
                 scheduleNote(ctx, filter, 528.00, 0.00, 0.95, baseGain * 1.1, 1.5, 'sine');
                 scheduleNote(ctx, filter, 792.00, 0.05, 0.85, baseGain * 0.65, 2.0, 'sine');
             } else if (preset === 'soft_harp') {
-                // 4-note cascading C5 -> E5 -> G5 -> C6 harp
                 scheduleNote(ctx, filter, 523.25, 0.00, 0.38, baseGain * 0.85, 2.0, 'sine');
                 scheduleNote(ctx, filter, 659.25, 0.08, 0.42, baseGain * 0.90, 2.0, 'sine');
                 scheduleNote(ctx, filter, 783.99, 0.16, 0.46, baseGain * 0.95, 2.0, 'sine');
                 scheduleNote(ctx, filter, 1046.50, 0.24, 0.62, baseGain, 2.0, 'sine');
             } else if (preset === 'double_pulse') {
-                // Fast studio ping A5 -> E6
                 scheduleNote(ctx, filter, 880.00, 0.00, 0.18, baseGain, 2.5, 'sine');
                 scheduleNote(ctx, filter, 1318.51, 0.14, 0.36, baseGain, 2.5, 'sine');
             } else {
