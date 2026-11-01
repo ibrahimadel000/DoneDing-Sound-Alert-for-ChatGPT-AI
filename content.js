@@ -1,16 +1,37 @@
-// AI Pulse v4.0 — Content Script for 25+ AI Chat Platforms & Live Multi-Tab Sync
+// DoneDing v6.0 — Content Script for 27 AI Chat Platforms, Per-Site Chimes & Top-Bar Alert Banner
 (function() {
     'use strict';
 
+    if (window.__DONEDING_LOADED__) return;
+    window.__DONEDING_LOADED__ = true;
+
     const DEFAULT_SETTINGS = {
         enabled: true,
+        theme: 'carbon',
         soundEnabled: true,
         soundPreset: 'pro_chime',
+        useDistinctSiteSounds: true,
+        siteSounds: {
+            gemini: 'pro_chime',
+            aistudio: 'pro_chime',
+            notebooklm: 'soft_harp',
+            claude: 'warm_marimba',
+            chatgpt: 'crystal_triad',
+            deepseek: 'double_pulse',
+            notion: 'soft_harp',
+            perplexity: 'gentle_zen',
+            copilot: 'crystal_triad',
+            grok: 'double_pulse',
+            poe: 'warm_marimba',
+            mistral: 'pro_chime',
+            qwen: 'crystal_triad',
+            kimi: 'soft_harp'
+        },
         volume: 0.85,
         onlyWhenUnfocused: false,
         desktopNotification: true,
+        inPageTopBanner: true,
         titleBadgeAlert: true,
-        minDurationMs: 500,
         disabledHosts: {},
         mutedTabs: {}
     };
@@ -19,7 +40,11 @@
 
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
         chrome.storage.sync.get(DEFAULT_SETTINGS, (stored) => {
-            settings = { ...DEFAULT_SETTINGS, ...stored };
+            settings = {
+                ...DEFAULT_SETTINGS,
+                ...stored,
+                siteSounds: { ...DEFAULT_SETTINGS.siteSounds, ...(stored.siteSounds || {}) }
+            };
         });
         chrome.storage.onChanged.addListener((changes, area) => {
             if (area === 'sync') {
@@ -30,7 +55,6 @@
         });
     }
 
-    // Wake up Web Audio engine on user interaction
     ['click', 'keydown', 'pointerdown'].forEach(evt => {
         window.addEventListener(evt, () => {
             if (window.AIChimeAudio) {
@@ -47,8 +71,6 @@
         const rect = el.getBoundingClientRect();
         return rect.width > 0 && rect.height > 0;
     }
-
-    // --- Platform-Specific & Universal Detection Functions ---
 
     function checkGeminiGenerating() {
         const stopBtn = document.querySelector(
@@ -151,7 +173,6 @@
 
     function checkDeepSeekGenerating() {
         if (checkGenericAIGenerating()) return true;
-        // DeepSeek often uses a role="button" in the chat input area with a square SVG path
         const inputBtns = document.querySelectorAll('[class*="chat-input"] [role="button"], [class*="ds-icon-button"]');
         for (const b of inputBtns) {
             if (!isElementVisible(b)) continue;
@@ -192,35 +213,34 @@
         return false;
     }
 
-    // Comprehensive Registry of 25+ AI Chat Platforms
     const PLATFORM_CATALOG = [
-        { id: 'gemini', match: h => h.includes('gemini.google.com'), name: 'Google Gemini', color: '#3B82F6', check: checkGeminiGenerating },
-        { id: 'aistudio', match: h => h.includes('aistudio.google.com'), name: 'Google AI Studio', color: '#2563EB', check: checkGeminiGenerating },
-        { id: 'notebooklm', match: h => h.includes('notebooklm.google.com'), name: 'NotebookLM', color: '#0EA5E9', check: checkGeminiGenerating },
-        { id: 'claude', match: h => h.includes('claude.ai'), name: 'Claude AI', color: '#D97757', check: checkClaudeGenerating },
+        { id: 'gemini', match: h => h.includes('gemini.google.com'), name: 'Google Gemini', color: '#D97757', check: checkGeminiGenerating },
+        { id: 'aistudio', match: h => h.includes('aistudio.google.com'), name: 'AI Studio', color: '#C26D53', check: checkGeminiGenerating },
+        { id: 'notebooklm', match: h => h.includes('notebooklm.google.com'), name: 'NotebookLM', color: '#2E9077', check: checkGeminiGenerating },
+        { id: 'claude', match: h => h.includes('claude.ai'), name: 'Claude', color: '#D97757', check: checkClaudeGenerating },
         { id: 'chatgpt', match: h => h.includes('chatgpt.com') || h.includes('openai.com'), name: 'ChatGPT', color: '#10A37F', check: checkChatGPTGenerating },
-        { id: 'notion', match: h => /notion\.(com|so|site)$/.test(h) || h.includes('notion'), name: 'Notion AI', color: '#64748B', check: checkNotionGenerating },
-        { id: 'deepseek', match: h => h.includes('deepseek.com'), name: 'DeepSeek', color: '#4D6BFE', check: checkDeepSeekGenerating },
-        { id: 'perplexity', match: h => h.includes('perplexity.ai'), name: 'Perplexity', color: '#14B8A6', check: checkGenericAIGenerating },
-        { id: 'copilot', match: h => h.includes('copilot.microsoft.com') || h.includes('m365.cloud.microsoft'), name: 'MS Copilot', color: '#8B5CF6', check: checkGenericAIGenerating },
-        { id: 'grok', match: h => h.includes('grok.com') || h.includes('x.com'), name: 'xAI Grok', color: '#F43F5E', check: checkGenericAIGenerating },
-        { id: 'poe', match: h => h.includes('poe.com'), name: 'Poe AI', color: '#7C3AED', check: checkGenericAIGenerating },
-        { id: 'mistral', match: h => h.includes('mistral.ai'), name: 'Mistral Le Chat', color: '#F97316', check: checkGenericAIGenerating },
-        { id: 'qwen', match: h => h.includes('qwen.ai') || h.includes('qwenlm.ai'), name: 'Qwen AI', color: '#6366F1', check: checkGenericAIGenerating },
-        { id: 'kimi', match: h => h.includes('moonshot.cn') || h.includes('kimi.ai'), name: 'Kimi AI', color: '#06B6D4', check: checkGenericAIGenerating },
-        { id: 'huggingchat', match: h => h.includes('huggingface.co'), name: 'HuggingChat', color: '#EAB308', check: checkGenericAIGenerating },
-        { id: 'meta', match: h => h.includes('meta.ai'), name: 'Meta AI', color: '#0081FB', check: checkGenericAIGenerating },
-        { id: 'phind', match: h => h.includes('phind.com'), name: 'Phind', color: '#22C55E', check: checkGenericAIGenerating },
-        { id: 'you', match: h => h.includes('you.com'), name: 'You.com', color: '#38BDF8', check: checkGenericAIGenerating },
-        { id: 'cohere', match: h => h.includes('cohere.com'), name: 'Cohere Coral', color: '#EC4899', check: checkGenericAIGenerating },
-        { id: 'v0', match: h => h.includes('v0.dev'), name: 'Vercel v0', color: '#94A3B8', check: checkGenericAIGenerating },
-        { id: 'bolt', match: h => h.includes('bolt.new'), name: 'Bolt.new', color: '#F59E0B', check: checkGenericAIGenerating },
-        { id: 'lovable', match: h => h.includes('lovable.dev'), name: 'Lovable', color: '#EC4899', check: checkGenericAIGenerating },
-        { id: 'replit', match: h => h.includes('replit.com'), name: 'Replit AI', color: '#F97316', check: checkGenericAIGenerating },
-        { id: 'character', match: h => h.includes('character.ai'), name: 'Character.AI', color: '#A855F7', check: checkGenericAIGenerating },
-        { id: 'pi', match: h => h.includes('pi.ai'), name: 'Pi AI', color: '#10B981', check: checkGenericAIGenerating },
-        { id: 'duck', match: h => h.includes('duck.ai'), name: 'Duck.ai', color: '#EF4444', check: checkGenericAIGenerating },
-        { id: 'blackbox', match: h => h.includes('blackbox.ai'), name: 'Blackbox AI', color: '#6366F1', check: checkGenericAIGenerating }
+        { id: 'notion', match: h => /notion\.(com|so|site)$/.test(h) || h.includes('notion'), name: 'Notion AI', color: '#8A847C', check: checkNotionGenerating },
+        { id: 'deepseek', match: h => h.includes('deepseek.com'), name: 'DeepSeek', color: '#3B82F6', check: checkDeepSeekGenerating },
+        { id: 'perplexity', match: h => h.includes('perplexity.ai'), name: 'Perplexity', color: '#20B2AA', check: checkGenericAIGenerating },
+        { id: 'copilot', match: h => h.includes('copilot.microsoft.com') || h.includes('m365.cloud.microsoft'), name: 'Copilot', color: '#D97706', check: checkGenericAIGenerating },
+        { id: 'grok', match: h => h.includes('grok.com') || h.includes('x.com'), name: 'Grok', color: '#E11D48', check: checkGenericAIGenerating },
+        { id: 'poe', match: h => h.includes('poe.com'), name: 'Poe', color: '#C084FC', check: checkGenericAIGenerating },
+        { id: 'mistral', match: h => h.includes('mistral.ai'), name: 'Mistral Le Chat', color: '#EA580C', check: checkGenericAIGenerating },
+        { id: 'qwen', match: h => h.includes('qwen.ai') || h.includes('qwenlm.ai'), name: 'Qwen Chat', color: '#0284C7', check: checkGenericAIGenerating },
+        { id: 'kimi', match: h => h.includes('moonshot.cn') || h.includes('kimi.ai'), name: 'Kimi AI', color: '#0D9488', check: checkGenericAIGenerating },
+        { id: 'huggingchat', match: h => h.includes('huggingface.co'), name: 'HuggingChat', color: '#CA8A04', check: checkGenericAIGenerating },
+        { id: 'meta', match: h => h.includes('meta.ai'), name: 'Meta AI', color: '#2563EB', check: checkGenericAIGenerating },
+        { id: 'phind', match: h => h.includes('phind.com'), name: 'Phind', color: '#16A34A', check: checkGenericAIGenerating },
+        { id: 'you', match: h => h.includes('you.com'), name: 'You.com', color: '#0284C7', check: checkGenericAIGenerating },
+        { id: 'cohere', match: h => h.includes('cohere.com'), name: 'Cohere Coral', color: '#DB2777', check: checkGenericAIGenerating },
+        { id: 'v0', match: h => h.includes('v0.dev'), name: 'Vercel v0', color: '#A8A298', check: checkGenericAIGenerating },
+        { id: 'bolt', match: h => h.includes('bolt.new'), name: 'Bolt.new', color: '#D97706', check: checkGenericAIGenerating },
+        { id: 'lovable', match: h => h.includes('lovable.dev'), name: 'Lovable', color: '#E11D48', check: checkGenericAIGenerating },
+        { id: 'replit', match: h => h.includes('replit.com'), name: 'Replit AI', color: '#EA580C', check: checkGenericAIGenerating },
+        { id: 'character', match: h => h.includes('character.ai'), name: 'Character.AI', color: '#CA8A04', check: checkGenericAIGenerating },
+        { id: 'pi', match: h => h.includes('pi.ai'), name: 'Pi AI', color: '#15803D', check: checkGenericAIGenerating },
+        { id: 'duck', match: h => h.includes('duck.ai'), name: 'Duck.ai', color: '#DC2626', check: checkGenericAIGenerating },
+        { id: 'blackbox', match: h => h.includes('blackbox.ai'), name: 'Blackbox AI', color: '#78736A', check: checkGenericAIGenerating }
     ];
 
     function getPlatformInfo() {
@@ -228,16 +248,81 @@
         for (const p of PLATFORM_CATALOG) {
             if (p.match(host)) return p;
         }
-        return { id: 'generic', name: 'AI Chat', color: '#6366F1', check: checkGenericAIGenerating };
+        return { id: 'generic', name: 'AI Chat', color: '#E55A2B', check: checkGenericAIGenerating };
     }
 
     function getCleanTabTitle() {
-        return (document.title || '').replace(/^🔔\s*(\[Done\]\s*)?/, '').trim() || getPlatformInfo().name;
+        return (document.title || '').replace(/^\[Ready\]\s*/, '').replace(/^🔔\s*(\[Done\]\s*)?/, '').trim() || getPlatformInfo().name;
     }
 
     function checkIsGenerating() {
-        const platform = getPlatformInfo();
-        return platform.check();
+        return getPlatformInfo().check();
+    }
+
+    // In-page Top-Bar Notification Pill (shows AI site + sound name when completion occurs)
+    let topBannerTimer = null;
+    function showInPageTopBanner(platform, elapsedMs, soundKey) {
+        if (settings.inPageTopBanner === false) return;
+        const soundLabel = (window.AIChimeAudio && window.AIChimeAudio.SOUND_LABELS[soundKey]) || 'Pro Chime';
+        const elapsedSec = (elapsedMs / 1000).toFixed(1);
+
+        let bar = document.getElementById('doneding-top-banner');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'doneding-top-banner';
+            bar.style.cssText = [
+                'position: fixed',
+                'top: 12px',
+                'left: 50%',
+                'transform: translateX(-50%) translateY(-8px)',
+                'z-index: 2147483647',
+                'background: #141413',
+                'color: #F2EFE9',
+                'border: 1px solid #3E3C38',
+                'border-radius: 6px',
+                'padding: 7px 12px',
+                'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
+                'font-size: 12px',
+                'line-height: 1.3',
+                'display: flex',
+                'align-items: center',
+                'gap: 10px',
+                'box-shadow: 0 6px 20px rgba(0,0,0,0.42)',
+                'opacity: 0',
+                'transition: opacity 0.18s cubic-bezier(0.22, 1, 0.36, 1), transform 0.18s cubic-bezier(0.22, 1, 0.36, 1)'
+            ].join(';');
+            document.documentElement.appendChild(bar);
+        }
+
+        bar.innerHTML = `
+            <span style="width:8px;height:8px;border-radius:2px;background:${platform.color};flex-shrink:0;"></span>
+            <span style="font-weight:600;color:#F2EFE9;">DoneDing · ${platform.name} finished (${elapsedSec}s)</span>
+            <span style="color:#ABA59B;border-left:1px solid #2B2A27;padding-left:8px;">Sound: ${soundLabel}</span>
+            <button id="doneding-banner-replay" style="background:#E55A2B;color:#FAF8F5;border:none;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:600;cursor:pointer;">Replay</button>
+        `;
+
+        const replayBtn = bar.querySelector('#doneding-banner-replay');
+        if (replayBtn) {
+            replayBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (window.AIChimeAudio) {
+                    window.AIChimeAudio.playChime(soundKey, settings.volume);
+                }
+            };
+        }
+
+        requestAnimationFrame(() => {
+            bar.style.opacity = '1';
+            bar.style.transform = 'translateX(-50%) translateY(0)';
+        });
+
+        if (topBannerTimer) clearTimeout(topBannerTimer);
+        topBannerTimer = setTimeout(() => {
+            if (bar) {
+                bar.style.opacity = '0';
+                bar.style.transform = 'translateX(-50%) translateY(-8px)';
+            }
+        }, 4500);
     }
 
     let originalTitle = null;
@@ -253,7 +338,7 @@
                 clearTitleAlert();
                 return;
             }
-            document.title = toggle ? `🔔 [Done] ${originalTitle}` : originalTitle;
+            document.title = toggle ? `[Ready] ${originalTitle}` : originalTitle;
             toggle = !toggle;
         }, 1200);
     }
@@ -293,9 +378,7 @@
                 generationStartTime: currentlyGenerating ? generationStartTime : null,
                 clearUnread
             });
-        } catch (e) {
-            // Ignore when extension reloads
-        }
+        } catch (e) {}
     }
 
     async function onGenerationComplete(elapsedMs) {
@@ -304,12 +387,17 @@
 
         const tabFocused = document.hasFocus() && !document.hidden;
         const platform = getPlatformInfo();
+        const chosenSound = window.AIChimeAudio
+            ? window.AIChimeAudio.resolveSoundForPlatform(platform.id, settings)
+            : (settings.soundPreset || 'pro_chime');
+
         let playedInPage = false;
 
         if (!settings.onlyWhenUnfocused || !tabFocused) {
             if (settings.soundEnabled && window.AIChimeAudio) {
-                playedInPage = await window.AIChimeAudio.playChime(settings.soundPreset, settings.volume);
+                playedInPage = await window.AIChimeAudio.playChime(chosenSound, settings.volume);
             }
+            showInPageTopBanner(platform, elapsedMs, chosenSound);
             triggerTitleAlert();
         }
 
@@ -322,6 +410,7 @@
                     brandColor: platform.color,
                     hostname: location.hostname,
                     title: getCleanTabTitle(),
+                    soundPlayed: chosenSound,
                     elapsedMs,
                     tabFocused,
                     needsOffscreenAudio: Boolean(
@@ -330,9 +419,7 @@
                         !playedInPage
                     )
                 });
-            } catch (e) {
-                // Ignore
-            }
+            } catch (e) {}
         }
     }
 
@@ -349,7 +436,6 @@
                 generationStartTime = Date.now();
                 clearTitleAlert();
                 syncStateWithBackground(true, true);
-                console.log('[AI Pulse] 🟢 Generation started on', getPlatformInfo().name);
             }
         } else if (!currentlyRunning && isGenerating && !stopDebounceTimer) {
             stopDebounceTimer = setTimeout(() => {
@@ -359,9 +445,8 @@
                 const elapsed = Date.now() - generationStartTime;
                 isGenerating = false;
 
-                const minDuration = Number(settings.minDurationMs) || 500;
-                if (elapsed >= minDuration) {
-                    console.log(`[AI Pulse] 🏁 Generation finished (${elapsed}ms).`);
+                // Automatic 500ms anti-flicker debounce (handled silently under the hood)
+                if (elapsed >= 500) {
                     onGenerationComplete(elapsed);
                 } else {
                     syncStateWithBackground(false);
@@ -370,10 +455,8 @@
         }
     }
 
-    // Initial registration with background multi-tab registry
-    setTimeout(() => syncStateWithBackground(checkIsGenerating()), 250);
+    setTimeout(() => syncStateWithBackground(checkIsGenerating()), 150);
 
-    // Keep title synced if conversation title changes
     let lastSentTitle = '';
     setInterval(() => {
         evaluateState();
@@ -387,14 +470,10 @@
     const observer = new MutationObserver(evaluateState);
     observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
 
-    window.testAIChime = () => window.AIChimeAudio && window.AIChimeAudio.playChime(settings.soundPreset, settings.volume);
-    window.debugAI = function() {
+    window.testAIChime = () => {
         const platform = getPlatformInfo();
-        console.log('--- AI Pulse v4.0 Diagnostics ---');
-        console.log('Platform:', platform.name, `(${location.hostname})`);
-        console.log('Audio State:', window.AIChimeAudio ? window.AIChimeAudio.getState() : 'missing');
-        console.log('Currently Generating?:', checkIsGenerating());
-        console.log('Settings:', settings);
+        const chosenSound = window.AIChimeAudio.resolveSoundForPlatform(platform.id, settings);
+        return window.AIChimeAudio && window.AIChimeAudio.playChime(chosenSound, settings.volume);
     };
 
     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {

@@ -1,8 +1,36 @@
-// Shared Web Audio Synthesizer for AI Pulse (v4.0)
+// DoneDing v6.0 — Shared Web Audio Synthesizer & Sound Catalog
 (function(global) {
     'use strict';
 
     let audioCtx = null;
+
+    const SOUND_LABELS = {
+        pro_chime: 'Pro Chime (F#5 → B5)',
+        crystal_triad: 'Crystal Triad',
+        warm_marimba: 'Warm Marimba',
+        soft_harp: 'Celestial Harp',
+        gentle_zen: 'Resonant Bowl',
+        double_pulse: 'Studio Pulse'
+    };
+
+    // Distinct default sound per AI platform so when multiple AI sites are open,
+    // the user can tell WHICH AI finished purely by ear!
+    const PLATFORM_DEFAULT_SOUNDS = {
+        gemini: 'pro_chime',
+        aistudio: 'pro_chime',
+        notebooklm: 'soft_harp',
+        claude: 'warm_marimba',
+        chatgpt: 'crystal_triad',
+        deepseek: 'double_pulse',
+        notion: 'soft_harp',
+        perplexity: 'gentle_zen',
+        copilot: 'crystal_triad',
+        grok: 'double_pulse',
+        poe: 'warm_marimba',
+        mistral: 'pro_chime',
+        qwen: 'crystal_triad',
+        kimi: 'soft_harp'
+    };
 
     function getAudioContext() {
         if (!audioCtx) {
@@ -26,9 +54,7 @@
             source.buffer = buffer;
             source.connect(ctx.destination);
             source.start(0);
-        } catch (e) {
-            // Audio context waiting for user gesture
-        }
+        } catch (e) {}
     }
 
     function scheduleNote(ctx, destination, freq, delay, duration, peakGain, overtoneRatio, waveType) {
@@ -83,7 +109,6 @@
             filter.connect(ctx.destination);
 
             if (preset === 'pro_chime') {
-                // Signature F#5 -> B5 two-note chime from user's script
                 scheduleNote(ctx, filter, 739.99, 0.00, 0.55, baseGain, 2.75, 'sine'); // F#5
                 scheduleNote(ctx, filter, 987.77, 0.14, 0.60, baseGain, 2.75, 'sine'); // B5
             } else if (preset === 'crystal_triad') {
@@ -112,14 +137,29 @@
 
             return true;
         } catch (err) {
-            console.warn('[AI Pulse] Web Audio playback failed:', err);
             return false;
         }
+    }
+
+    function resolveSoundForPlatform(platformId, settings) {
+        if (!settings) return 'pro_chime';
+        if (settings.useDistinctSiteSounds !== false) {
+            if (settings.siteSounds && settings.siteSounds[platformId]) {
+                return settings.siteSounds[platformId];
+            }
+            if (PLATFORM_DEFAULT_SOUNDS[platformId]) {
+                return PLATFORM_DEFAULT_SOUNDS[platformId];
+            }
+        }
+        return settings.soundPreset || 'pro_chime';
     }
 
     global.AIChimeAudio = {
         primeAudio,
         playChime,
+        resolveSoundForPlatform,
+        SOUND_LABELS,
+        PLATFORM_DEFAULT_SOUNDS,
         getState: () => (audioCtx ? audioCtx.state : 'uninitialized')
     };
 })(window);
