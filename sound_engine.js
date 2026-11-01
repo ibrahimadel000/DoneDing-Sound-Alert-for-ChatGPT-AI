@@ -1,4 +1,4 @@
-// Shared Web Audio Synthesizer for AI Chat Completion Notifier
+// Shared Web Audio Synthesizer for AI Pulse (v4.0)
 (function(global) {
     'use strict';
 
@@ -31,7 +31,6 @@
         }
     }
 
-    // Play a rich two-harmonic note through a warm lowpass filter (based on original v2.3 script)
     function scheduleNote(ctx, destination, freq, delay, duration, peakGain, overtoneRatio, waveType) {
         const startTime = ctx.currentTime + delay;
 
@@ -84,25 +83,26 @@
             filter.connect(ctx.destination);
 
             if (preset === 'pro_chime') {
-                // Original signature F#5 -> B5 two-note chime from user's script
+                // Signature F#5 -> B5 two-note chime from user's script
                 scheduleNote(ctx, filter, 739.99, 0.00, 0.55, baseGain, 2.75, 'sine'); // F#5
                 scheduleNote(ctx, filter, 987.77, 0.14, 0.60, baseGain, 2.75, 'sine'); // B5
             } else if (preset === 'crystal_triad') {
-                // Uplifting C6 -> E6 -> G6 arpeggio
                 scheduleNote(ctx, filter, 587.33, 0.00, 0.45, baseGain * 0.9, 2.0, 'sine'); // D5
                 scheduleNote(ctx, filter, 739.99, 0.11, 0.45, baseGain * 0.95, 2.0, 'sine'); // F#5
                 scheduleNote(ctx, filter, 1174.66, 0.22, 0.65, baseGain, 2.0, 'sine');      // D6
             } else if (preset === 'warm_marimba') {
-                // Soft wooden marimba chord (G4 -> D5 -> B5)
                 scheduleNote(ctx, filter, 392.00, 0.00, 0.35, baseGain * 1.1, 4.0, 'triangle');
                 scheduleNote(ctx, filter, 587.33, 0.09, 0.40, baseGain * 1.0, 4.0, 'triangle');
                 scheduleNote(ctx, filter, 987.77, 0.18, 0.50, baseGain * 0.9, 4.0, 'sine');
             } else if (preset === 'gentle_zen') {
-                // Deep singing bowl harmonic
                 scheduleNote(ctx, filter, 528.00, 0.00, 0.95, baseGain, 1.5, 'sine');
                 scheduleNote(ctx, filter, 792.00, 0.06, 0.85, baseGain * 0.6, 2.0, 'sine');
+            } else if (preset === 'soft_harp') {
+                scheduleNote(ctx, filter, 523.25, 0.00, 0.42, baseGain * 0.85, 2.0, 'sine'); // C5
+                scheduleNote(ctx, filter, 659.25, 0.08, 0.45, baseGain * 0.90, 2.0, 'sine'); // E5
+                scheduleNote(ctx, filter, 783.99, 0.16, 0.48, baseGain * 0.95, 2.0, 'sine'); // G5
+                scheduleNote(ctx, filter, 1046.50, 0.24, 0.65, baseGain, 2.0, 'sine');       // C6
             } else if (preset === 'double_pulse') {
-                // Crisp modern double ping (A5 -> A5)
                 scheduleNote(ctx, filter, 880.00, 0.00, 0.22, baseGain, 2.5, 'sine');
                 scheduleNote(ctx, filter, 1174.66, 0.16, 0.40, baseGain, 2.5, 'sine');
             } else {
@@ -112,7 +112,7 @@
 
             return true;
         } catch (err) {
-            console.warn('[AI Chime] Web Audio playback failed:', err);
+            console.warn('[AI Pulse] Web Audio playback failed:', err);
             return false;
         }
     }

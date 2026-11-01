@@ -1,49 +1,34 @@
-# AI Chat Completion Sound & Notifier (Chrome Extension v3.0)
+# AI Pulse PRO v4.0 — Multi-Tab AI Chat Completion Notifier
 
-Never wait staring at a loading spinner again. **AI Chat Completion Sound & Notifier** automatically plays a pleasant synthesized chime, flashes a `🔔 [Done]` badge in the tab title, and optionally sends a clickable system notification the moment your AI assistant finishes generating its response.
-
-Built directly on top of your Tampermonkey v2.3 Web Audio API engine (`F#5 → B5` Pro Chime) and upgraded to a full **Manifest V3 Chrome Extension** with background-tab audio fallback (`chrome.offscreen`), a live settings popup, and support for all major AI chat platforms.
+A professional Manifest V3 Chrome Extension that monitors **all open AI chat tabs across Chrome simultaneously**, plays a customizable synthesized chime when any AI finishes generating, displays a live toolbar badge (`⚡` while generating, `✓` when finished in the background), and lets you jump between multiple open AI conversations in one click.
 
 ---
 
-## Supported AI Platforms
+## What's New in v4.0
 
-| Platform | Domains Covered |
-| :--- | :--- |
-| **Google Gemini & AI Studio** | `gemini.google.com`, `aistudio.google.com` |
-| **Anthropic Claude** | `claude.ai` |
-| **OpenAI ChatGPT** | `chatgpt.com`, `chat.openai.com` |
-| **Notion AI** | `notion.so`, `notion.com`, `notion.site` |
-| **Perplexity AI** | `perplexity.ai` |
-| **DeepSeek** | `chat.deepseek.com`, `deepseek.com` |
-| **Microsoft Copilot** | `copilot.microsoft.com` |
-| **Poe & Grok** | `poe.com`, `grok.com` |
-
----
-
-## How to Install in Google Chrome / Brave / Edge (2 Minutes)
-
-1. **Unzip** `ai_chat_completion_notifier.zip` to a permanent folder on your laptop (for example, `Documents/ai-chat-completion-sound`).
-2. Open Google Chrome and navigate to:
-   ```
-   chrome://extensions/
-   ```
-3. In the top-right corner, toggle **Developer mode** **ON**.
-4. Click the **Load unpacked** button in the top-left corner.
-5. Select the unzipped folder containing `manifest.json`.
-6. Pin **AI Chat Completion Sound & Notifier** from your Chrome extensions puzzle icon (`🧩`) in the toolbar to test chimes, adjust volume, or customize notification rules anytime.
+1. **Multi-Tab Live Command Center (`Active Chats` Tab)**:
+   - Automatically detects and lists **every open AI chat tab across all Chrome windows** in real time.
+   - Displays each tab's platform badge, conversation title, and live state (`⚡ Generating 12s...`, `🔔 Done!`, or `Idle`).
+   - Includes a one-click **`Focus ↗`** button on every card to immediately bring that specific tab and window to the front.
+   - Updates the Chrome toolbar extension icon badge dynamically with the number of currently generating tabs (amber) or unread finished tabs (emerald green).
+2. **Professional 3-Tab Dark Glass UI/UX**:
+   - **Active Chats**: Live multi-tab session monitor + recent completions history log with response durations.
+   - **Sound & Alerts**: Interactive Chime Studio with 6 harmonic Web Audio presets (`Pro Chime F#5→B5`, `Crystal Triad`, `Warm Marimba`, `Celestial Harp`, `Zen Bowl`, `Double Pulse`), master volume slider, and granular notification rules.
+   - **25+ Sites**: Searchable directory of 27 supported AI platforms with individual enable/disable toggles.
+3. **27 Supported AI Chat Websites Out of the Box**:
+   - **Google Gemini**, **Google AI Studio**, **NotebookLM**
+   - **Anthropic Claude**, **OpenAI ChatGPT**, **Notion AI**
+   - **DeepSeek**, **Perplexity AI**, **Microsoft Copilot**
+   - **xAI Grok**, **Poe AI**, **Mistral Le Chat**, **Qwen AI**, **Kimi AI**
+   - **HuggingChat**, **Meta AI**, **Phind**, **You.com**, **Cohere Coral**
+   - **Vercel v0**, **Bolt.new**, **Lovable**, **Replit AI**
+   - **Character.AI**, **Pi AI**, **Duck.ai**, **Blackbox AI**
 
 ---
 
-## Key Features & Improvements Over Tampermonkey
+## Installation / Upgrade Instructions
 
-- **Guaranteed Background Audio (`chrome.offscreen` Fallback)**: Browsers often suspend Web Audio contexts in background tabs. If a tab's audio context is suspended while you are working in another app or window, the extension automatically routes the chime through Chrome's Offscreen Audio API so you never miss a completion sound.
-- **5 Built-in Web Audio Chime Presets + Volume Slider**:
-  - **Pro Chime (F#5 → B5 Original)**: Your exact warm low-pass filtered dual-oscillator chime from Tampermonkey v2.3.
-  - **Crystal Triad**: Uplifting D5 → F#5 → D6 arpeggio.
-  - **Warm Marimba**: Soft percussive triad.
-  - **Zen Singing Bowl**: Deep harmonic bell.
-  - **Modern Double Pulse**: Crisp two-note ping.
-- **Smart Multi-Step Debounce**: Prevents premature chimes when AI models pause briefly between tool calls or thinking blocks.
-- **Clickable System Notifications**: Optional OS banner notification that brings you straight back to the finished AI tab when clicked.
-- **Console Diagnostics Preserved**: Open DevTools on any supported AI chat page and run `debugAI()` or `testAIChime()` anytime.
+1. Extract `ai_chat_completion_notifier.zip` to your extension folder.
+2. Open `chrome://extensions/` in Chrome (or Brave / Edge).
+3. Ensure **Developer mode** is toggled **ON** (top-right).
+4. Click **Load unpacked** and select the extracted folder (or click the **Reload `↻`** icon on your existing extension card if upgrading).

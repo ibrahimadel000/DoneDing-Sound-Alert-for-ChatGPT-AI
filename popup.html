@@ -2,92 +2,183 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>AI Chat Completion Sound</title>
+  <title>AI Pulse — Multi-Tab AI Chat Notifier</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div class="app">
+    <!-- Top Brand Header -->
     <header class="header">
       <div class="brand">
-        <img src="icons/icon48.png" alt="Logo" class="logo">
+        <div class="logo-wrap">
+          <img src="icons/icon48.png" alt="AI Pulse" class="logo">
+          <span class="pulse-ring" id="headerPulseRing"></span>
+        </div>
         <div>
-          <h1>AI Chime Notifier</h1>
-          <p class="subtitle" id="statusSubtitle">Active on all AI Chats</p>
+          <div class="title-row">
+            <h1>AI Pulse</h1>
+            <span class="version-pill">PRO v4.0</span>
+          </div>
+          <p class="subtitle" id="statusSubtitle">Monitoring 25+ AI Platforms</p>
         </div>
       </div>
-      <label class="switch" title="Master Enable/Disable">
+
+      <label class="switch" title="Master Enable / Pause">
         <input type="checkbox" id="enabledToggle" checked>
         <span class="slider"></span>
       </label>
     </header>
 
-    <section class="status-card" id="siteStatusCard">
-      <div class="status-indicator">
-        <span class="dot" id="liveDot"></span>
-        <span id="siteNameText">Ready for AI chat tabs</span>
+    <!-- Live KPI Summary Bar -->
+    <section class="kpi-strip">
+      <div class="kpi-box">
+        <span class="kpi-val" id="kpiOpenTabs">0</span>
+        <span class="kpi-label">Open AI Tabs</span>
       </div>
-      <span class="badge" id="generationBadge">Idle</span>
+      <div class="kpi-box kpi-amber">
+        <span class="kpi-val" id="kpiGenerating">0</span>
+        <span class="kpi-label">Generating Now</span>
+      </div>
+      <div class="kpi-box kpi-emerald">
+        <span class="kpi-val" id="kpiCompleted">0</span>
+        <span class="kpi-label">Total Notified</span>
+      </div>
     </section>
 
-    <section class="card">
-      <div class="section-title">Sound &amp; Chime Settings</div>
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="tab-sessions">
+        <span>Active Chats</span>
+        <span class="tab-count" id="navSessionsBadge">0</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-audio">
+        <span>Sound &amp; Alerts</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-platforms">
+        <span>25+ Sites</span>
+      </button>
+    </nav>
 
-      <div class="control-row">
-        <label for="soundPreset">Chime Tone</label>
-        <div class="select-group">
-          <select id="soundPreset">
-            <option value="pro_chime">Pro Chime (F#5 → B5 Original)</option>
-            <option value="crystal_triad">Crystal Triad (Arpeggio)</option>
-            <option value="warm_marimba">Warm Marimba</option>
-            <option value="gentle_zen">Zen Singing Bowl</option>
-            <option value="double_pulse">Modern Double Pulse</option>
-          </select>
-          <button id="testSoundBtn" class="btn-test" title="Preview Chime">🔔 Test</button>
+    <!-- TAB 1: Multi-Tab Live AI Sessions Center -->
+    <main class="tab-panel active" id="tab-sessions">
+      <div class="panel-header">
+        <span class="panel-title">Open AI Tabs Across Chrome</span>
+        <button id="refreshTabsBtn" class="icon-btn" title="Refresh Open Tabs">↻ Refresh</button>
+      </div>
+
+      <div id="multiTabList" class="session-list">
+        <!-- Dynamically populated with all open AI chat tabs -->
+      </div>
+
+      <div class="panel-header recent-header">
+        <span class="panel-title">Recent Completions</span>
+        <button id="clearHistoryBtn" class="link-btn">Clear</button>
+      </div>
+      <div id="recentHistoryList" class="history-list">
+        <!-- Dynamically populated with recent completions -->
+      </div>
+    </main>
+
+    <!-- TAB 2: Sound Studio & Notification Rules -->
+    <main class="tab-panel" id="tab-audio">
+      <div class="card">
+        <div class="card-title-row">
+          <span class="section-title">Synthesized Chime Studio</span>
+          <button id="testSoundBtn" class="btn-test" title="Preview Selected Chime">
+            <span>🔔 Preview Sound</span>
+          </button>
+        </div>
+
+        <div class="preset-grid" id="presetGrid">
+          <button class="preset-chip active" data-preset="pro_chime">
+            <span class="preset-name">Pro Chime</span>
+            <span class="preset-desc">F#5 → B5 Signature</span>
+          </button>
+          <button class="preset-chip" data-preset="crystal_triad">
+            <span class="preset-name">Crystal Triad</span>
+            <span class="preset-desc">D5 → F#5 → D6</span>
+          </button>
+          <button class="preset-chip" data-preset="warm_marimba">
+            <span class="preset-name">Warm Marimba</span>
+            <span class="preset-desc">Woody Percussive</span>
+          </button>
+          <button class="preset-chip" data-preset="soft_harp">
+            <span class="preset-name">Celestial Harp</span>
+            <span class="preset-desc">4-Note C6 Chord</span>
+          </button>
+          <button class="preset-chip" data-preset="gentle_zen">
+            <span class="preset-name">Zen Bowl</span>
+            <span class="preset-desc">528Hz Harmonic</span>
+          </button>
+          <button class="preset-chip" data-preset="double_pulse">
+            <span class="preset-name">Double Pulse</span>
+            <span class="preset-desc">Crisp Studio Ping</span>
+          </button>
+        </div>
+
+        <div class="control-row">
+          <div class="label-with-val">
+            <label for="volumeSlider">Master Chime Volume</label>
+            <span id="volumeLabel" class="val-pill">85%</span>
+          </div>
+          <input type="range" id="volumeSlider" min="5" max="100" value="85" class="range-slider">
         </div>
       </div>
 
-      <div class="control-row">
-        <div class="label-with-val">
-          <label for="volumeSlider">Volume</label>
-          <span id="volumeLabel">85%</span>
+      <div class="card">
+        <span class="section-title">Smart Trigger Rules</span>
+
+        <label class="toggle-row">
+          <div>
+            <div class="toggle-title">Play Audio Chime</div>
+            <div class="toggle-sub">Plays via Web Audio + Background Offscreen Engine</div>
+          </div>
+          <input type="checkbox" id="soundEnabledToggle" checked>
+        </label>
+
+        <label class="toggle-row">
+          <div>
+            <div class="toggle-title">Smart Background-Only Mode</div>
+            <div class="toggle-sub">Mute chime if you are already looking at that AI tab</div>
+          </div>
+          <input type="checkbox" id="onlyWhenUnfocusedToggle">
+        </label>
+
+        <label class="toggle-row">
+          <div>
+            <div class="toggle-title">Clickable Desktop Banner</div>
+            <div class="toggle-sub">System notification that jumps back to the finished tab</div>
+          </div>
+          <input type="checkbox" id="desktopNotificationToggle" checked>
+        </label>
+
+        <label class="toggle-row">
+          <div>
+            <div class="toggle-title">Flash 🔔 in Unfocused Tab Title</div>
+            <div class="toggle-sub">Pulses tab title until you return to the conversation</div>
+          </div>
+          <input type="checkbox" id="titleBadgeAlertToggle" checked>
+        </label>
+
+        <div class="control-row compact">
+          <div>
+            <div class="toggle-title">Minimum Generation Time</div>
+            <div class="toggle-sub">Ignore instant UI flickers shorter than this (ms)</div>
+          </div>
+          <input type="number" id="minDurationInput" min="100" max="10000" step="100" value="500" class="num-input">
         </div>
-        <input type="range" id="volumeSlider" min="5" max="100" value="85" class="range-slider">
       </div>
-    </section>
+    </main>
 
-    <section class="card">
-      <div class="section-title">Notification Behavior</div>
-
-      <label class="checkbox-row">
-        <span>Play sound on completion</span>
-        <input type="checkbox" id="soundEnabledToggle" checked>
-      </label>
-
-      <label class="checkbox-row">
-        <span>Only alert when tab is in background</span>
-        <input type="checkbox" id="onlyWhenUnfocusedToggle">
-      </label>
-
-      <label class="checkbox-row">
-        <span>Show Desktop Banner Notification</span>
-        <input type="checkbox" id="desktopNotificationToggle" checked>
-      </label>
-
-      <label class="checkbox-row">
-        <span>Flash 🔔 in tab title when unfocused</span>
-        <input type="checkbox" id="titleBadgeAlertToggle" checked>
-      </label>
-
-      <div class="control-row compact">
-        <label for="minDurationInput">Min response time (ms)</label>
-        <input type="number" id="minDurationInput" min="100" max="10000" step="100" value="500" class="num-input">
+    <!-- TAB 3: Supported AI Websites Directory (25+ Platforms) -->
+    <main class="tab-panel" id="tab-platforms">
+      <div class="search-box-wrap">
+        <input type="text" id="platformSearchInput" placeholder="Filter 27 supported AI chat websites..." class="search-input">
       </div>
-    </section>
-
-    <footer class="footer">
-      <span id="statsCounter">0 completions tracked</span>
-      <span class="platforms-hint">Gemini · Claude · ChatGPT · Notion · DeepSeek</span>
-    </footer>
+      <div id="platformDirectoryGrid" class="platform-list">
+        <!-- Populated dynamically with all 27 platforms & per-domain toggles -->
+      </div>
+    </main>
   </div>
 
   <script src="sound_engine.js"></script>

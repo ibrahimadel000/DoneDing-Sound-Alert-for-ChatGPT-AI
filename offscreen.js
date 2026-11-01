@@ -1,4 +1,3 @@
-// Offscreen audio player for background tab reliability
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message && message.type === 'OFFSCREEN_PLAY_CHIME') {
         window.AIChimeAudio.playChime(message.preset || 'pro_chime', message.volume ?? 0.85)

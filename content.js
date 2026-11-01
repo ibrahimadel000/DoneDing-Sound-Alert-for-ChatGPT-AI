@@ -1,4 +1,4 @@
-// AI Chat Completion Sound & Notifier - Content Script
+// AI Pulse v4.0 — Content Script for 25+ AI Chat Platforms & Live Multi-Tab Sync
 (function() {
     'use strict';
 
@@ -11,12 +11,12 @@
         desktopNotification: true,
         titleBadgeAlert: true,
         minDurationMs: 500,
-        disabledHosts: {}
+        disabledHosts: {},
+        mutedTabs: {}
     };
 
     let settings = { ...DEFAULT_SETTINGS };
 
-    // Load settings & subscribe to live updates from popup
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
         chrome.storage.sync.get(DEFAULT_SETTINGS, (stored) => {
             settings = { ...DEFAULT_SETTINGS, ...stored };
@@ -30,7 +30,7 @@
         });
     }
 
-    // Wake up Web Audio engine on user interaction (from user's v2.3 script)
+    // Wake up Web Audio engine on user interaction
     ['click', 'keydown', 'pointerdown'].forEach(evt => {
         window.addEventListener(evt, () => {
             if (window.AIChimeAudio) {
@@ -39,7 +39,6 @@
         }, { capture: true, passive: true });
     });
 
-    // Modern visibility check that works on position: fixed elements & SVGs
     function isElementVisible(el) {
         if (!el) return false;
         if (typeof el.checkVisibility === 'function') {
@@ -49,9 +48,8 @@
         return rect.width > 0 && rect.height > 0;
     }
 
-    // --- Platform Detection Functions ---
+    // --- Platform-Specific & Universal Detection Functions ---
 
-    // 1. Google Gemini & Google AI Studio (Preserves user's v2.3 detection + enhancements)
     function checkGeminiGenerating() {
         const stopBtn = document.querySelector(
             'stop-button, ' +
@@ -79,7 +77,6 @@
         return false;
     }
 
-    // 2. Anthropic Claude (claude.ai)
     function checkClaudeGenerating() {
         const stopSelectors = [
             'button[aria-label*="Stop Response" i]',
@@ -91,8 +88,7 @@
         const el = document.querySelector(stopSelectors.join(', '));
         if (el && isElementVisible(el)) return true;
 
-        // Check composer area for a visible Stop button
-        const buttons = document.querySelectorAll('fieldset button, form button, [ role=" region"] button');
+        const buttons = document.querySelectorAll('fieldset button, form button');
         for (const btn of buttons) {
             if (!isElementVisible(btn)) continue;
             const label = ((btn.getAttribute('aria-label') || '') + ' ' + (btn.textContent || '')).trim().toLowerCase();
@@ -103,7 +99,6 @@
         return false;
     }
 
-    // 3. OpenAI ChatGPT (chatgpt.com / chat.openai.com)
     function checkChatGPTGenerating() {
         const stopBtn = document.querySelector(
             'button[data-testid="stop-button"], ' +
@@ -115,7 +110,6 @@
         return Boolean(stopBtn && isElementVisible(stopBtn));
     }
 
-    // 4. Notion AI (Preserves user's exact v2.3 detection)
     function checkNotionGenerating() {
         const clickable = document.querySelectorAll(
             'button, [role="button"], [data-testid*="stop" i], [aria-label*="stop" i]'
@@ -155,42 +149,90 @@
         return false;
     }
 
-    // 5. Universal Fallback for Perplexity, DeepSeek, Copilot, Grok, Poe
+    function checkDeepSeekGenerating() {
+        if (checkGenericAIGenerating()) return true;
+        // DeepSeek often uses a role="button" in the chat input area with a square SVG path
+        const inputBtns = document.querySelectorAll('[class*="chat-input"] [role="button"], [class*="ds-icon-button"]');
+        for (const b of inputBtns) {
+            if (!isElementVisible(b)) continue;
+            const aria = (b.getAttribute('aria-label') || '').toLowerCase();
+            if (aria.includes('stop')) return true;
+        }
+        return false;
+    }
+
     function checkGenericAIGenerating() {
         const stopBtn = document.querySelector(
             'button[aria-label*="Stop" i], ' +
             'button[data-testid*="stop" i], ' +
             'button[title*="Stop" i], ' +
             '[role="button"][aria-label*="Stop" i], ' +
-            'button[aria-label*="إيقاف" i]'
+            '[role="button"][title*="Stop" i], ' +
+            'button[aria-label*="Cancel" i][class*="stop" i], ' +
+            'button[aria-label*="إيقاف" i], ' +
+            'button[aria-label*="Arrêter" i], ' +
+            'button[aria-label*="Detener" i]'
         );
         if (stopBtn && isElementVisible(stopBtn)) return true;
 
-        // DeepSeek / Poe / Perplexity stop buttons inside composer
         const buttons = document.querySelectorAll('button, [role="button"]');
         for (const btn of buttons) {
             if (!isElementVisible(btn)) continue;
             const text = (btn.textContent || '').trim().toLowerCase();
-            if (text === 'stop' || text === 'stop generating' || text === 'stop responding') {
+            if (
+                text === 'stop' ||
+                text === 'stop generating' ||
+                text === 'stop responding' ||
+                text === 'stop response' ||
+                text === 'إيقاف'
+            ) {
                 return true;
             }
         }
         return false;
     }
 
+    // Comprehensive Registry of 25+ AI Chat Platforms
+    const PLATFORM_CATALOG = [
+        { id: 'gemini', match: h => h.includes('gemini.google.com'), name: 'Google Gemini', color: '#3B82F6', check: checkGeminiGenerating },
+        { id: 'aistudio', match: h => h.includes('aistudio.google.com'), name: 'Google AI Studio', color: '#2563EB', check: checkGeminiGenerating },
+        { id: 'notebooklm', match: h => h.includes('notebooklm.google.com'), name: 'NotebookLM', color: '#0EA5E9', check: checkGeminiGenerating },
+        { id: 'claude', match: h => h.includes('claude.ai'), name: 'Claude AI', color: '#D97757', check: checkClaudeGenerating },
+        { id: 'chatgpt', match: h => h.includes('chatgpt.com') || h.includes('openai.com'), name: 'ChatGPT', color: '#10A37F', check: checkChatGPTGenerating },
+        { id: 'notion', match: h => /notion\.(com|so|site)$/.test(h) || h.includes('notion'), name: 'Notion AI', color: '#64748B', check: checkNotionGenerating },
+        { id: 'deepseek', match: h => h.includes('deepseek.com'), name: 'DeepSeek', color: '#4D6BFE', check: checkDeepSeekGenerating },
+        { id: 'perplexity', match: h => h.includes('perplexity.ai'), name: 'Perplexity', color: '#14B8A6', check: checkGenericAIGenerating },
+        { id: 'copilot', match: h => h.includes('copilot.microsoft.com') || h.includes('m365.cloud.microsoft'), name: 'MS Copilot', color: '#8B5CF6', check: checkGenericAIGenerating },
+        { id: 'grok', match: h => h.includes('grok.com') || h.includes('x.com'), name: 'xAI Grok', color: '#F43F5E', check: checkGenericAIGenerating },
+        { id: 'poe', match: h => h.includes('poe.com'), name: 'Poe AI', color: '#7C3AED', check: checkGenericAIGenerating },
+        { id: 'mistral', match: h => h.includes('mistral.ai'), name: 'Mistral Le Chat', color: '#F97316', check: checkGenericAIGenerating },
+        { id: 'qwen', match: h => h.includes('qwen.ai') || h.includes('qwenlm.ai'), name: 'Qwen AI', color: '#6366F1', check: checkGenericAIGenerating },
+        { id: 'kimi', match: h => h.includes('moonshot.cn') || h.includes('kimi.ai'), name: 'Kimi AI', color: '#06B6D4', check: checkGenericAIGenerating },
+        { id: 'huggingchat', match: h => h.includes('huggingface.co'), name: 'HuggingChat', color: '#EAB308', check: checkGenericAIGenerating },
+        { id: 'meta', match: h => h.includes('meta.ai'), name: 'Meta AI', color: '#0081FB', check: checkGenericAIGenerating },
+        { id: 'phind', match: h => h.includes('phind.com'), name: 'Phind', color: '#22C55E', check: checkGenericAIGenerating },
+        { id: 'you', match: h => h.includes('you.com'), name: 'You.com', color: '#38BDF8', check: checkGenericAIGenerating },
+        { id: 'cohere', match: h => h.includes('cohere.com'), name: 'Cohere Coral', color: '#EC4899', check: checkGenericAIGenerating },
+        { id: 'v0', match: h => h.includes('v0.dev'), name: 'Vercel v0', color: '#94A3B8', check: checkGenericAIGenerating },
+        { id: 'bolt', match: h => h.includes('bolt.new'), name: 'Bolt.new', color: '#F59E0B', check: checkGenericAIGenerating },
+        { id: 'lovable', match: h => h.includes('lovable.dev'), name: 'Lovable', color: '#EC4899', check: checkGenericAIGenerating },
+        { id: 'replit', match: h => h.includes('replit.com'), name: 'Replit AI', color: '#F97316', check: checkGenericAIGenerating },
+        { id: 'character', match: h => h.includes('character.ai'), name: 'Character.AI', color: '#A855F7', check: checkGenericAIGenerating },
+        { id: 'pi', match: h => h.includes('pi.ai'), name: 'Pi AI', color: '#10B981', check: checkGenericAIGenerating },
+        { id: 'duck', match: h => h.includes('duck.ai'), name: 'Duck.ai', color: '#EF4444', check: checkGenericAIGenerating },
+        { id: 'blackbox', match: h => h.includes('blackbox.ai'), name: 'Blackbox AI', color: '#6366F1', check: checkGenericAIGenerating }
+    ];
+
     function getPlatformInfo() {
         const host = location.hostname.toLowerCase();
-        if (host.includes('gemini.google.com')) return { name: 'Google Gemini', check: checkGeminiGenerating };
-        if (host.includes('aistudio.google.com')) return { name: 'Google AI Studio', check: checkGeminiGenerating };
-        if (host.includes('claude.ai')) return { name: 'Claude AI', check: checkClaudeGenerating };
-        if (host.includes('chatgpt.com') || host.includes('openai.com')) return { name: 'ChatGPT', check: checkChatGPTGenerating };
-        if (/notion\.(com|so|site)$/.test(host) || host.includes('notion')) return { name: 'Notion AI', check: checkNotionGenerating };
-        if (host.includes('perplexity.ai')) return { name: 'Perplexity', check: checkGenericAIGenerating };
-        if (host.includes('deepseek.com')) return { name: 'DeepSeek', check: checkGenericAIGenerating };
-        if (host.includes('copilot.microsoft.com')) return { name: 'Microsoft Copilot', check: checkGenericAIGenerating };
-        if (host.includes('poe.com')) return { name: 'Poe AI', check: checkGenericAIGenerating };
-        if (host.includes('grok.com')) return { name: 'Grok', check: checkGenericAIGenerating };
-        return { name: 'AI Chat', check: checkGenericAIGenerating };
+        for (const p of PLATFORM_CATALOG) {
+            if (p.match(host)) return p;
+        }
+        return { id: 'generic', name: 'AI Chat', color: '#6366F1', check: checkGenericAIGenerating };
+    }
+
+    function getCleanTabTitle() {
+        return (document.title || '').replace(/^🔔\s*(\[Done\]\s*)?/, '').trim() || getPlatformInfo().name;
     }
 
     function checkIsGenerating() {
@@ -198,14 +240,13 @@
         return platform.check();
     }
 
-    // Tab title badge alert helper when user is on another tab/window
     let originalTitle = null;
     let titleFlashTimer = null;
 
-    function triggerTitleAlert(platformName) {
+    function triggerTitleAlert() {
         if (!settings.titleBadgeAlert || document.hasFocus()) return;
         if (titleFlashTimer) return;
-        originalTitle = document.title.replace(/^🔔\s*(\[Done\]\s*)?/, '');
+        originalTitle = getCleanTabTitle();
         let toggle = true;
         titleFlashTimer = setInterval(() => {
             if (document.hasFocus()) {
@@ -225,6 +266,7 @@
                 document.title = originalTitle;
             }
         }
+        syncStateWithBackground(false, true);
     }
 
     window.addEventListener('focus', clearTitleAlert);
@@ -232,55 +274,72 @@
         if (!document.hidden) clearTitleAlert();
     });
 
-    // Core Completion Trigger
+    let isGenerating = false;
+    let generationStartTime = 0;
+    let stopDebounceTimer = null;
+
+    function syncStateWithBackground(currentlyGenerating, clearUnread = false) {
+        if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.sendMessage) return;
+        const platform = getPlatformInfo();
+        try {
+            chrome.runtime.sendMessage({
+                type: 'TAB_STATE_SYNC',
+                platformId: platform.id,
+                platformName: platform.name,
+                brandColor: platform.color,
+                hostname: location.hostname,
+                title: getCleanTabTitle(),
+                isGenerating: Boolean(currentlyGenerating),
+                generationStartTime: currentlyGenerating ? generationStartTime : null,
+                clearUnread
+            });
+        } catch (e) {
+            // Ignore when extension reloads
+        }
+    }
+
     async function onGenerationComplete(elapsedMs) {
         if (!settings.enabled) return;
         if (settings.disabledHosts && settings.disabledHosts[location.hostname]) return;
 
         const tabFocused = document.hasFocus() && !document.hidden;
-        if (settings.onlyWhenUnfocused && tabFocused) {
-            console.log('[AI Chime] 🔕 Generation finished while tab is active (onlyWhenUnfocused is enabled).');
-            return;
-        }
-
         const platform = getPlatformInfo();
         let playedInPage = false;
 
-        if (settings.soundEnabled && window.AIChimeAudio) {
-            playedInPage = await window.AIChimeAudio.playChime(settings.soundPreset, settings.volume);
-            if (playedInPage) {
-                console.log(`[AI Chime] 🔔 Chime played (${settings.soundPreset}).`);
+        if (!settings.onlyWhenUnfocused || !tabFocused) {
+            if (settings.soundEnabled && window.AIChimeAudio) {
+                playedInPage = await window.AIChimeAudio.playChime(settings.soundPreset, settings.volume);
             }
+            triggerTitleAlert();
         }
 
-        triggerTitleAlert(platform.name);
-
-        // Notify background service worker (for offscreen audio fallback if in-page was blocked, stats & desktop notification)
         if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
             try {
                 chrome.runtime.sendMessage({
                     type: 'AI_GENERATION_COMPLETED',
-                    hostname: location.hostname,
+                    platformId: platform.id,
                     platformName: platform.name,
+                    brandColor: platform.color,
+                    hostname: location.hostname,
+                    title: getCleanTabTitle(),
                     elapsedMs,
                     tabFocused,
-                    needsOffscreenAudio: Boolean(settings.soundEnabled && !playedInPage)
+                    needsOffscreenAudio: Boolean(
+                        settings.soundEnabled &&
+                        (!settings.onlyWhenUnfocused || !tabFocused) &&
+                        !playedInPage
+                    )
                 });
             } catch (e) {
-                // Extension context invalidated or reloaded
+                // Ignore
             }
         }
     }
-
-    let isGenerating = false;
-    let generationStartTime = 0;
-    let stopDebounceTimer = null;
 
     function evaluateState() {
         const currentlyRunning = checkIsGenerating();
 
         if (currentlyRunning) {
-            // Cancel any pending completion debounce if the stop button re-appeared during streaming
             if (stopDebounceTimer) {
                 clearTimeout(stopDebounceTimer);
                 stopDebounceTimer = null;
@@ -289,58 +348,72 @@
                 isGenerating = true;
                 generationStartTime = Date.now();
                 clearTitleAlert();
-                console.log('[AI Chime] 🟢 Generation detected...');
+                syncStateWithBackground(true, true);
+                console.log('[AI Pulse] 🟢 Generation started on', getPlatformInfo().name);
             }
         } else if (!currentlyRunning && isGenerating && !stopDebounceTimer) {
-            // Wait 350ms to confirm generation truly finished (prevents false triggers during multi-step tool calls)
             stopDebounceTimer = setTimeout(() => {
                 stopDebounceTimer = null;
-                if (checkIsGenerating()) return; // Still running
+                if (checkIsGenerating()) return;
 
                 const elapsed = Date.now() - generationStartTime;
                 isGenerating = false;
 
                 const minDuration = Number(settings.minDurationMs) || 500;
                 if (elapsed >= minDuration) {
-                    console.log(`[AI Chime] 🏁 Generation finished (${elapsed}ms). Playing chime...`);
+                    console.log(`[AI Pulse] 🏁 Generation finished (${elapsed}ms).`);
                     onGenerationComplete(elapsed);
+                } else {
+                    syncStateWithBackground(false);
                 }
             }, 350);
         }
     }
 
-    // Observe DOM mutations & poll every 600ms (just like user's v2.3 script)
+    // Initial registration with background multi-tab registry
+    setTimeout(() => syncStateWithBackground(checkIsGenerating()), 250);
+
+    // Keep title synced if conversation title changes
+    let lastSentTitle = '';
+    setInterval(() => {
+        evaluateState();
+        const curTitle = getCleanTabTitle();
+        if (curTitle !== lastSentTitle) {
+            lastSentTitle = curTitle;
+            syncStateWithBackground(isGenerating);
+        }
+    }, 650);
+
     const observer = new MutationObserver(evaluateState);
     observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
-    setInterval(evaluateState, 600);
 
-    // Console diagnostic helpers (preserved from user's script)
     window.testAIChime = () => window.AIChimeAudio && window.AIChimeAudio.playChime(settings.soundPreset, settings.volume);
     window.debugAI = function() {
         const platform = getPlatformInfo();
-        console.log('--- AI Chime Diagnostics (Extension v3.0) ---');
+        console.log('--- AI Pulse v4.0 Diagnostics ---');
         console.log('Platform:', platform.name, `(${location.hostname})`);
         console.log('Audio State:', window.AIChimeAudio ? window.AIChimeAudio.getState() : 'missing');
         console.log('Currently Generating?:', checkIsGenerating());
-        console.log('Active Settings:', settings);
+        console.log('Settings:', settings);
     };
 
-    // Listen for popup diagnostic/test messages
     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
         chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             if (msg && msg.type === 'GET_TAB_STATUS') {
                 const platform = getPlatformInfo();
                 sendResponse({
                     supported: true,
+                    platformId: platform.id,
                     platformName: platform.name,
+                    brandColor: platform.color,
                     hostname: location.hostname,
+                    cleanTitle: getCleanTabTitle(),
                     isGenerating: checkIsGenerating(),
+                    generationStartTime: isGenerating ? generationStartTime : null,
                     audioState: window.AIChimeAudio ? window.AIChimeAudio.getState() : 'uninitialized'
                 });
                 return true;
             }
         });
     }
-
-    console.log('[AI Chime] Extension v3.0 active. Type "debugAI()" in console to inspect state.');
 })();
