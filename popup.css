@@ -1,8 +1,8 @@
 /* ==========================================================================
-   DoneDing v6.0 — Tactile Instrument Design System (pbakaus/impeccable)
-   - Role-based OKLCH palette (Studio Carbon & Warm Paper themes)
-   - Top-Bar Notification Strip showing AI site + Sound signature
-   - Integrated per-session check/uncheck & per-site sound selector
+   DoneDing v7.0 — Tactile Instrument Design System (pbakaus/impeccable)
+   - Redesigned Top-Bar Notification Card with accent bar, wave icon & badge
+   - Larger custom sound selector with down-arrow chevron in Open Sessions
+   - Output gain right inside Open Sessions, zero "Idle" clutter
    ========================================================================== */
 
 :root,
@@ -12,14 +12,14 @@ html[data-theme="carbon"] {
   --bg-elevated: oklch(0.23 0.007 70);      /* #1C1C1A Warm Graphite */
   --bg-hover: oklch(0.26 0.008 70);         /* #242320 Subtle Surface Hover */
   --border-hairline: oklch(0.29 0.008 70);  /* #2B2A27 1px Structural Rule */
-  --border-strong: oklch(0.37 0.010 70);    /* #3E3C38 Interactive Border */
+  --border-strong: oklch(0.38 0.010 70);    /* #403E3A Interactive Border */
 
   --text-primary: oklch(0.95 0.012 85);     /* #F2EFE9 Warm Chalk (14.8:1) */
   --text-secondary: oklch(0.73 0.015 80);   /* #ABA59B Warm Stone (5.4:1) */
   --text-muted: oklch(0.62 0.014 75);       /* #8A847A Warm Pewter (4.5:1) */
 
   --accent-primary: oklch(0.64 0.185 38);   /* #E55A2B Braun Signal Vermilion */
-  --accent-surface: oklch(0.25 0.042 38);   /* Tinted Vermilion Surface */
+  --accent-surface: oklch(0.24 0.035 38);   /* Tinted Vermilion Surface */
   --accent-text: oklch(0.98 0.01 70);
 
   --status-active: oklch(0.79 0.155 82);    /* #E5A000 Signal Amber */
@@ -34,14 +34,14 @@ html[data-theme="paper"] {
   --bg-elevated: oklch(0.92 0.012 82);      /* #E8E3D9 Warm Stone Surface */
   --bg-hover: oklch(0.89 0.014 80);         /* #DFD9CE Hover Surface */
   --border-hairline: oklch(0.85 0.014 80);  /* #D4CFC3 Hairline Rule */
-  --border-strong: oklch(0.72 0.016 78);    /* #B0A99C Control Border */
+  --border-strong: oklch(0.70 0.016 78);    /* #ACA598 Control Border */
 
   --text-primary: oklch(0.20 0.008 65);     /* #171614 Deep Archival Ink (14.5:1) */
   --text-secondary: oklch(0.40 0.012 70);   /* #4C4842 Warm Charcoal (6.8:1) */
   --text-muted: oklch(0.50 0.012 72);       /* #68635B Muted Umber (4.8:1) */
 
   --accent-primary: oklch(0.56 0.19 36);    /* #CC4416 Vermilion Ink */
-  --accent-surface: oklch(0.90 0.04 38);
+  --accent-surface: oklch(0.91 0.035 38);
   --accent-text: oklch(0.98 0.005 85);
 
   --status-active: oklch(0.52 0.14 75);     /* #945E00 Deep Amber */
@@ -82,7 +82,7 @@ button, input, select {
 }
 
 body {
-  width: 396px;
+  width: 408px;
   height: 536px;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   background-color: var(--bg-canvas);
@@ -127,7 +127,6 @@ body {
   border-radius: 50%;
   background-color: var(--status-ready);
   flex-shrink: 0;
-  transition: background-color 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .status-led.generating {
@@ -188,79 +187,112 @@ body {
   height: 13px;
 }
 
-/* Live Top-Bar Notification Strip inside Extension */
-.top-notif-bar {
+/* Redesigned Floating Top-Bar Notification Pill inside Extension */
+.top-alert-wrap {
+  padding: 9px 16px 4px 16px;
+}
+
+.top-alert-card {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 6px 16px;
+  gap: 10px;
   background-color: var(--bg-elevated);
-  border-bottom: 1px solid var(--border-hairline);
-  font-size: 11.5px;
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  padding: 8px 10px 8px 14px;
+  overflow: hidden;
 }
 
-.top-notif-bar.is-fresh {
+.top-alert-card.is-fresh {
   background-color: var(--accent-surface);
+  border-color: var(--accent-primary);
 }
 
-.top-notif-main {
+.top-alert-accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--accent-primary);
+}
+
+.top-alert-body {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 2px;
   min-width: 0;
   flex: 1;
 }
 
-.top-notif-copy {
+.top-alert-headline {
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  gap: 7px;
 }
 
-.top-notif-site {
-  font-weight: 600;
+.top-alert-site {
+  font-size: 12.5px;
+  font-weight: 650;
   color: var(--text-primary);
-}
-
-.top-notif-sound {
-  color: var(--text-secondary);
-  font-size: 11px;
-  padding-left: 6px;
-  border-left: 1px solid var(--border-strong);
+  letter-spacing: -0.01em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.top-notif-actions {
+.top-alert-time {
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--status-ready);
+  background-color: var(--status-ready-bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.top-alert-subline {
   display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.svg-wave {
+  width: 13px;
+  height: 13px;
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.top-alert-sound {
+  font-weight: 600;
+  color: var(--accent-primary);
+}
+
+.top-alert-replay {
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
   align-items: center;
   gap: 5px;
   flex-shrink: 0;
 }
 
-.mini-btn {
-  background-color: var(--bg-canvas);
-  color: var(--text-primary);
-  border: 1px solid var(--border-strong);
-  border-radius: 5px;
-  padding: 2.5px 7px;
-  font-size: 11px;
-  font-weight: 550;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.mini-btn:hover {
+.top-alert-replay:hover {
+  background-color: var(--accent-primary);
   border-color: var(--accent-primary);
-  color: var(--accent-primary);
+  color: var(--accent-text);
 }
 
 /* Tactile Hardware Rocker Switch */
@@ -309,11 +341,11 @@ body {
   background-color: var(--accent-text);
 }
 
-/* 2-Tab Segmented Navigation Bar */
+/* Segmented Navigation Bar */
 .seg-nav {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  padding: 7px 16px;
+  padding: 6px 16px 8px 16px;
   gap: 8px;
   border-bottom: 1px solid var(--border-hairline);
   background-color: var(--bg-canvas);
@@ -379,11 +411,11 @@ body {
 }
 
 .section-bar-spaced {
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .section-heading {
-  font-size: 12px;
+  font-size: 11.8px;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--text-secondary);
@@ -413,8 +445,8 @@ body {
   background-color: var(--accent-primary);
   color: var(--accent-text);
   border: none;
-  border-radius: 5px;
-  padding: 4px 9px;
+  border-radius: 6px;
+  padding: 5px 10px;
   font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
@@ -424,15 +456,15 @@ body {
 }
 
 .primary-action:hover {
-  opacity: 0.9;
+  opacity: 0.92;
 }
 
-/* Flush Architectural Session Table with Per-Session Checkbox & Per-Site Sound Dropdown */
+/* Flush Session Table with Larger Sound Dropdown + Down Arrow */
 .session-table {
   display: flex;
   flex-direction: column;
   border-top: 1px solid var(--border-hairline);
-  max-height: 205px;
+  max-height: 175px;
   overflow-y: auto;
 }
 
@@ -441,12 +473,12 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 7px 2px;
+  padding: 7.5px 2px;
   border-bottom: 1px solid var(--border-hairline);
 }
 
 .session-row.is-muted {
-  opacity: 0.52;
+  opacity: 0.48;
 }
 
 .session-main {
@@ -493,26 +525,44 @@ body {
 .session-meta {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   flex-shrink: 0;
+}
+
+/* Larger Sound Picker with Explicit Down-Arrow Chevron */
+.sound-select-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
 }
 
 .site-sound-select {
   background-color: var(--bg-elevated);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-hairline);
-  border-radius: 4px;
-  padding: 2px 5px;
-  font-size: 10.5px;
-  max-width: 96px;
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 5px 24px 5px 9px;
+  font-size: 11.5px;
+  font-weight: 550;
+  min-width: 132px;
   cursor: pointer;
   outline: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .site-sound-select:hover,
 .site-sound-select:focus {
-  color: var(--text-primary);
-  border-color: var(--border-strong);
+  border-color: var(--accent-primary);
+  background-color: var(--bg-hover);
+}
+
+.select-chevron {
+  position: absolute;
+  right: 7px;
+  width: 12px;
+  height: 12px;
+  color: var(--text-secondary);
+  pointer-events: none;
 }
 
 .state-tag {
@@ -520,10 +570,10 @@ body {
   align-items: center;
   gap: 4px;
   font-size: 10.5px;
-  font-weight: 550;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 3px 6px;
+  border-radius: 5px;
   color: var(--text-secondary);
   background-color: var(--bg-elevated);
 }
@@ -542,9 +592,9 @@ body {
   background: var(--bg-elevated);
   color: var(--text-primary);
   border: 1px solid var(--border-strong);
-  border-radius: 5px;
-  padding: 2.5px 6px;
-  font-size: 10.5px;
+  border-radius: 6px;
+  padding: 4.5px 7px;
+  font-size: 11px;
   font-weight: 550;
   cursor: pointer;
   display: inline-flex;
@@ -566,12 +616,49 @@ body {
   border-bottom: 1px solid var(--border-hairline);
 }
 
+/* Output Gain Fader inside Open Sessions */
+.fader-block {
+  margin-top: 9px;
+  padding: 8px 11px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-hairline);
+  border-radius: 7px;
+}
+
+.fader-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.fader-label {
+  font-size: 11.5px;
+  font-weight: 550;
+  color: var(--text-primary);
+}
+
+.fader-readout {
+  font-size: 11.5px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-primary);
+}
+
+.fader-input {
+  appearance: auto;
+  -webkit-appearance: slider-horizontal;
+  width: 100%;
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+}
+
 /* Completion Log Table */
 .log-table {
   display: flex;
   flex-direction: column;
   border-top: 1px solid var(--border-hairline);
-  max-height: 100px;
+  max-height: 82px;
   overflow-y: auto;
 }
 
@@ -580,7 +667,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 5px 2px;
+  padding: 4.5px 2px;
   border-bottom: 1px solid var(--border-hairline);
   font-size: 11px;
 }
@@ -614,96 +701,6 @@ body {
   flex-shrink: 0;
 }
 
-/* View 2: Acoustic Tone Selector List */
-.tone-list {
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid var(--border-hairline);
-}
-
-.tone-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5.5px 6px;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--border-hairline);
-  color: var(--text-primary);
-  cursor: pointer;
-  text-align: left;
-}
-
-.tone-row:hover {
-  background-color: var(--bg-elevated);
-}
-
-.tone-row.active {
-  background-color: var(--accent-surface);
-}
-
-.tone-radio {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  border: 1.5px solid var(--border-strong);
-  position: relative;
-  flex-shrink: 0;
-}
-
-.tone-row.active .tone-radio {
-  border-color: var(--accent-primary);
-  background-color: var(--accent-primary);
-}
-
-.tone-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-  min-width: 102px;
-}
-
-.tone-spec {
-  font-size: 11px;
-  color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
-}
-
-.fader-block {
-  margin-top: 8px;
-  padding: 7px 10px;
-  background-color: var(--bg-elevated);
-  border-radius: 6px;
-}
-
-.fader-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.fader-label {
-  font-size: 11.5px;
-  font-weight: 550;
-  color: var(--text-primary);
-}
-
-.fader-readout {
-  font-size: 11.5px;
-  font-weight: 650;
-  font-variant-numeric: tabular-nums;
-  color: var(--accent-primary);
-}
-
-.fader-input {
-  appearance: auto;
-  -webkit-appearance: slider-horizontal;
-  width: 100%;
-  accent-color: var(--accent-primary);
-  cursor: pointer;
-}
-
 /* Trigger Rules Stack */
 .rule-stack {
   display: flex;
@@ -715,8 +712,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 6px 2px;
+  gap: 12px;
+  padding: 9px 2px;
   border-bottom: 1px solid var(--border-hairline);
   cursor: pointer;
 }
@@ -724,17 +721,19 @@ body {
 .rule-copy {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .rule-title {
-  font-size: 11.8px;
-  font-weight: 550;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 .rule-desc {
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--text-secondary);
+  line-height: 1.35;
 }
 
 .rule-check {

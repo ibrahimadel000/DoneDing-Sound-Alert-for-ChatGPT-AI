@@ -1,67 +1,25 @@
-// DoneDing v6.0 — Content Script for 27 AI Chat Platforms, Per-Site Chimes & Top-Bar Alert Banner
+// DoneDing v7.0 — Content Script with Auto-Cleanup, Central Audio Delegation & Redesigned Top-Bar Alert
 (function() {
     'use strict';
 
-    if (window.__DONEDING_LOADED__) return;
-    window.__DONEDING_LOADED__ = true;
+    // Clean up any previous DoneDing content script instance in this tab (prevents duplicate listeners after extension reload)
+    window.dispatchEvent(new CustomEvent('__doneding_cleanup__'));
 
-    const DEFAULT_SETTINGS = {
-        enabled: true,
-        theme: 'carbon',
-        soundEnabled: true,
-        soundPreset: 'pro_chime',
-        useDistinctSiteSounds: true,
-        siteSounds: {
-            gemini: 'pro_chime',
-            aistudio: 'pro_chime',
-            notebooklm: 'soft_harp',
-            claude: 'warm_marimba',
-            chatgpt: 'crystal_triad',
-            deepseek: 'double_pulse',
-            notion: 'soft_harp',
-            perplexity: 'gentle_zen',
-            copilot: 'crystal_triad',
-            grok: 'double_pulse',
-            poe: 'warm_marimba',
-            mistral: 'pro_chime',
-            qwen: 'crystal_triad',
-            kimi: 'soft_harp'
-        },
-        volume: 0.85,
-        onlyWhenUnfocused: false,
-        desktopNotification: true,
-        inPageTopBanner: true,
-        titleBadgeAlert: true,
-        disabledHosts: {},
-        mutedTabs: {}
-    };
+    let isActiveInstance = true;
+    let pollIntervalId = null;
+    let mutationObserver = null;
+    let titleFlashTimer = null;
+    let topBannerTimer = null;
+    let stopDebounceTimer = null;
 
-    let settings = { ...DEFAULT_SETTINGS };
-
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-        chrome.storage.sync.get(DEFAULT_SETTINGS, (stored) => {
-            settings = {
-                ...DEFAULT_SETTINGS,
-                ...stored,
-                siteSounds: { ...DEFAULT_SETTINGS.siteSounds, ...(stored.siteSounds || {}) }
-            };
-        });
-        chrome.storage.onChanged.addListener((changes, area) => {
-            if (area === 'sync') {
-                for (const [key, change] of Object.entries(changes)) {
-                    settings[key] = change.newValue;
-                }
-            }
-        });
-    }
-
-    ['click', 'keydown', 'pointerdown'].forEach(evt => {
-        window.addEventListener(evt, () => {
-            if (window.AIChimeAudio) {
-                window.AIChimeAudio.primeAudio();
-            }
-        }, { capture: true, passive: true });
-    });
+    window.addEventListener('__doneding_cleanup__', () => {
+        isActiveInstance = false;
+        if (pollIntervalId) clearInterval(pollIntervalId);
+        if (mutationObserver) mutationObserver.disconnect();
+        if (titleFlashTimer) clearInterval(titleFlashTimer);
+        if (topBannerTimer) clearTimeout(topBannerTimer);
+        if (stopDebounceTimer) clearTimeout(stopDebounceTimer);
+    }, { once: true });
 
     function isElementVisible(el) {
         if (!el) return false;
@@ -259,11 +217,8 @@
         return getPlatformInfo().check();
     }
 
-    // In-page Top-Bar Notification Pill (shows AI site + sound name when completion occurs)
-    let topBannerTimer = null;
-    function showInPageTopBanner(platform, elapsedMs, soundKey) {
-        if (settings.inPageTopBanner === false) return;
-        const soundLabel = (window.AIChimeAudio && window.AIChimeAudio.SOUND_LABELS[soundKey]) || 'Pro Chime';
+    // Redesigned Tactile Studio Top-Bar Notification Pill (inside webpage viewport)
+    function showInPageTopBanner(platform, elapsedMs, soundKey, soundLabel, volume) {
         const elapsedSec = (elapsedMs / 1000).toFixed(1);
 
         let bar = document.getElementById('doneding-top-banner');
@@ -272,69 +227,95 @@
             bar.id = 'doneding-top-banner';
             bar.style.cssText = [
                 'position: fixed',
-                'top: 12px',
+                'top: 14px',
                 'left: 50%',
-                'transform: translateX(-50%) translateY(-8px)',
+                'transform: translateX(-50%) translateY(-14px) scale(0.98)',
                 'z-index: 2147483647',
-                'background: #141413',
+                'background: #161514',
                 'color: #F2EFE9',
-                'border: 1px solid #3E3C38',
-                'border-radius: 6px',
-                'padding: 7px 12px',
-                'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
-                'font-size: 12px',
+                'border: 1px solid #33312E',
+                'border-radius: 10px',
+                'padding: 8px 10px 8px 12px',
+                'font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif',
+                'font-size: 12.5px',
                 'line-height: 1.3',
                 'display: flex',
                 'align-items: center',
-                'gap: 10px',
-                'box-shadow: 0 6px 20px rgba(0,0,0,0.42)',
+                'gap: 12px',
+                'box-shadow: 0 12px 32px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.3)',
                 'opacity: 0',
-                'transition: opacity 0.18s cubic-bezier(0.22, 1, 0.36, 1), transform 0.18s cubic-bezier(0.22, 1, 0.36, 1)'
+                'transition: opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1), transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)'
             ].join(';');
             document.documentElement.appendChild(bar);
         }
 
         bar.innerHTML = `
-            <span style="width:8px;height:8px;border-radius:2px;background:${platform.color};flex-shrink:0;"></span>
-            <span style="font-weight:600;color:#F2EFE9;">DoneDing · ${platform.name} finished (${elapsedSec}s)</span>
-            <span style="color:#ABA59B;border-left:1px solid #2B2A27;padding-left:8px;">Sound: ${soundLabel}</span>
-            <button id="doneding-banner-replay" style="background:#E55A2B;color:#FAF8F5;border:none;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:600;cursor:pointer;">Replay</button>
+            <div style="display:flex;align-items:center;gap:9px;">
+              <span style="width:10px;height:10px;border-radius:3px;background:${platform.color};display:inline-block;flex-shrink:0;"></span>
+              <div style="display:flex;flex-direction:column;gap:1px;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span style="font-weight:650;color:#F2EFE9;letter-spacing:-0.01em;">${platform.name} completed</span>
+                  <span style="font-size:11px;font-variant-numeric:tabular-nums;color:#26B860;background:rgba(38,184,96,0.14);padding:1px 6px;border-radius:4px;font-weight:600;">${elapsedSec}s</span>
+                </div>
+                <div style="font-size:11px;color:#ABA59B;display:flex;align-items:center;gap:5px;">
+                  <span>DoneDing</span>
+                  <span>·</span>
+                  <span style="color:#E55A2B;font-weight:600;">♪ ${soundLabel}</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;padding-left:8px;border-left:1px solid #2B2A27;">
+              <button id="doneding-banner-replay" style="background:#242320;color:#F2EFE9;border:1px solid #3E3C38;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                <span>♪ Replay</span>
+              </button>
+              <button id="doneding-banner-close" title="Dismiss" style="background:transparent;color:#8A847A;border:none;border-radius:5px;padding:3px 5px;font-size:13px;cursor:pointer;line-height:1;">✕</button>
+            </div>
         `;
 
         const replayBtn = bar.querySelector('#doneding-banner-replay');
         if (replayBtn) {
             replayBtn.onclick = (e) => {
                 e.stopPropagation();
-                if (window.AIChimeAudio) {
-                    window.AIChimeAudio.playChime(soundKey, settings.volume);
-                }
+                chrome.runtime.sendMessage({
+                    type: 'PLAY_SOUND_CENTRAL',
+                    preset: soundKey,
+                    volume: volume ?? 0.85
+                });
+            };
+        }
+
+        const closeBtn = bar.querySelector('#doneding-banner-close');
+        if (closeBtn) {
+            closeBtn.onclick = (e) => {
+                e.stopPropagation();
+                bar.style.opacity = '0';
+                bar.style.transform = 'translateX(-50%) translateY(-14px) scale(0.98)';
             };
         }
 
         requestAnimationFrame(() => {
             bar.style.opacity = '1';
-            bar.style.transform = 'translateX(-50%) translateY(0)';
+            bar.style.transform = 'translateX(-50%) translateY(0) scale(1)';
         });
 
         if (topBannerTimer) clearTimeout(topBannerTimer);
         topBannerTimer = setTimeout(() => {
             if (bar) {
                 bar.style.opacity = '0';
-                bar.style.transform = 'translateX(-50%) translateY(-8px)';
+                bar.style.transform = 'translateX(-50%) translateY(-14px) scale(0.98)';
             }
-        }, 4500);
+        }, 5500);
     }
 
     let originalTitle = null;
-    let titleFlashTimer = null;
 
     function triggerTitleAlert() {
-        if (!settings.titleBadgeAlert || document.hasFocus()) return;
+        if (document.hasFocus()) return;
         if (titleFlashTimer) return;
         originalTitle = getCleanTabTitle();
         let toggle = true;
         titleFlashTimer = setInterval(() => {
-            if (document.hasFocus()) {
+            if (!isActiveInstance || document.hasFocus()) {
                 clearTitleAlert();
                 return;
             }
@@ -361,9 +342,9 @@
 
     let isGenerating = false;
     let generationStartTime = 0;
-    let stopDebounceTimer = null;
 
     function syncStateWithBackground(currentlyGenerating, clearUnread = false) {
+        if (!isActiveInstance) return;
         if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.sendMessage) return;
         const platform = getPlatformInfo();
         try {
@@ -381,25 +362,10 @@
         } catch (e) {}
     }
 
-    async function onGenerationComplete(elapsedMs) {
-        if (!settings.enabled) return;
-        if (settings.disabledHosts && settings.disabledHosts[location.hostname]) return;
-
+    function onGenerationComplete(elapsedMs) {
+        if (!isActiveInstance) return;
         const tabFocused = document.hasFocus() && !document.hidden;
         const platform = getPlatformInfo();
-        const chosenSound = window.AIChimeAudio
-            ? window.AIChimeAudio.resolveSoundForPlatform(platform.id, settings)
-            : (settings.soundPreset || 'pro_chime');
-
-        let playedInPage = false;
-
-        if (!settings.onlyWhenUnfocused || !tabFocused) {
-            if (settings.soundEnabled && window.AIChimeAudio) {
-                playedInPage = await window.AIChimeAudio.playChime(chosenSound, settings.volume);
-            }
-            showInPageTopBanner(platform, elapsedMs, chosenSound);
-            triggerTitleAlert();
-        }
 
         if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
             try {
@@ -410,20 +376,35 @@
                     brandColor: platform.color,
                     hostname: location.hostname,
                     title: getCleanTabTitle(),
-                    soundPlayed: chosenSound,
                     elapsedMs,
-                    tabFocused,
-                    needsOffscreenAudio: Boolean(
-                        settings.soundEnabled &&
-                        (!settings.onlyWhenUnfocused || !tabFocused) &&
-                        !playedInPage
-                    )
+                    tabFocused
+                }, (resp) => {
+                    if (chrome.runtime.lastError || !resp) return;
+                    // If session is unchecked/muted, do NOT show banner or flash title!
+                    if (resp.muted) return;
+
+                    // If central offscreen audio couldn't play for any reason, play once in-page as backup
+                    if (!resp.played && window.AIChimeAudio && resp.soundPreset) {
+                        window.AIChimeAudio.playChime(resp.soundPreset, resp.volume ?? 0.85);
+                    }
+
+                    if (resp.showBanner) {
+                        showInPageTopBanner(
+                            platform,
+                            elapsedMs,
+                            resp.soundPreset || 'pro_chime',
+                            resp.soundLabel || 'Pro Chime',
+                            resp.volume ?? 0.85
+                        );
+                    }
+                    triggerTitleAlert();
                 });
             } catch (e) {}
         }
     }
 
     function evaluateState() {
+        if (!isActiveInstance) return;
         const currentlyRunning = checkIsGenerating();
 
         if (currentlyRunning) {
@@ -440,12 +421,11 @@
         } else if (!currentlyRunning && isGenerating && !stopDebounceTimer) {
             stopDebounceTimer = setTimeout(() => {
                 stopDebounceTimer = null;
-                if (checkIsGenerating()) return;
+                if (!isActiveInstance || checkIsGenerating()) return;
 
                 const elapsed = Date.now() - generationStartTime;
                 isGenerating = false;
 
-                // Automatic 500ms anti-flicker debounce (handled silently under the hood)
                 if (elapsed >= 500) {
                     onGenerationComplete(elapsed);
                 } else {
@@ -458,7 +438,8 @@
     setTimeout(() => syncStateWithBackground(checkIsGenerating()), 150);
 
     let lastSentTitle = '';
-    setInterval(() => {
+    pollIntervalId = setInterval(() => {
+        if (!isActiveInstance) return;
         evaluateState();
         const curTitle = getCleanTabTitle();
         if (curTitle !== lastSentTitle) {
@@ -467,17 +448,12 @@
         }
     }, 650);
 
-    const observer = new MutationObserver(evaluateState);
-    observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
-
-    window.testAIChime = () => {
-        const platform = getPlatformInfo();
-        const chosenSound = window.AIChimeAudio.resolveSoundForPlatform(platform.id, settings);
-        return window.AIChimeAudio && window.AIChimeAudio.playChime(chosenSound, settings.volume);
-    };
+    mutationObserver = new MutationObserver(evaluateState);
+    mutationObserver.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
 
     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
         chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+            if (!isActiveInstance) return;
             if (msg && msg.type === 'GET_TAB_STATUS') {
                 const platform = getPlatformInfo();
                 sendResponse({
@@ -488,8 +464,7 @@
                     hostname: location.hostname,
                     cleanTitle: getCleanTabTitle(),
                     isGenerating: checkIsGenerating(),
-                    generationStartTime: isGenerating ? generationStartTime : null,
-                    audioState: window.AIChimeAudio ? window.AIChimeAudio.getState() : 'uninitialized'
+                    generationStartTime: isGenerating ? generationStartTime : null
                 });
                 return true;
             }

@@ -32,41 +32,47 @@
       </div>
     </header>
 
-    <!-- Live Top-Bar Notification Strip (Shows AI Site + Sound Played) -->
-    <aside class="top-notif-bar" id="topNotifBar" aria-live="polite">
-      <div class="top-notif-main">
-        <span class="host-marker" id="topNotifDot" style="background-color: #D97757"></span>
-        <div class="top-notif-copy">
-          <span class="top-notif-site" id="topNotifSite">No recent alert</span>
-          <span class="top-notif-sound" id="topNotifSound">Sound: Pro Chime</span>
+    <!-- Redesigned Top-Bar Notification Pill inside Extension -->
+    <section class="top-alert-wrap">
+      <div class="top-alert-card" id="topNotifBar" aria-live="polite">
+        <span class="top-alert-accent" id="topNotifAccent" style="background-color: #D97757"></span>
+        <div class="top-alert-body">
+          <div class="top-alert-headline">
+            <span class="top-alert-site" id="topNotifSite">Waiting for AI completion</span>
+            <span class="top-alert-time" id="topNotifTime">Live</span>
+          </div>
+          <div class="top-alert-subline">
+            <svg class="svg-wave" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+              <path d="M2.5 8v2M5.5 5v6M8.5 3v10M11.5 6v4M14 7v2"></path>
+            </svg>
+            <span class="top-alert-sound" id="topNotifSound">Pro Chime</span>
+          </div>
         </div>
-      </div>
-      <div class="top-notif-actions">
-        <button id="topNotifReplayBtn" class="mini-btn" title="Replay site sound">
+        <button id="topNotifReplayBtn" class="top-alert-replay" title="Replay completion sound">
           <svg class="svg-icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="3 5.5 6.5 5.5 10.5 2.5 10.5 13.5 6.5 10.5 3 10.5"></polygon>
             <path d="M13 5.5a3.5 3.5 0 0 1 0 5"></path>
           </svg>
-          <span>Sound</span>
+          <span>Replay</span>
         </button>
       </div>
-    </aside>
+    </section>
 
-    <!-- Streamlined 2-Tab Segmented Navigation (Sessions & Acoustics) -->
+    <!-- 2-Tab Segmented Navigation Bar -->
     <nav class="seg-nav" role="tablist" aria-label="Views">
       <button class="seg-btn active" data-tab="view-sessions" role="tab" aria-selected="true">
         <span>Open Sessions</span>
         <span class="seg-count" id="navSessionsCount">0</span>
       </button>
-      <button class="seg-btn" data-tab="view-sound" role="tab" aria-selected="false">
-        <span>Acoustics &amp; Alerts</span>
+      <button class="seg-btn" data-tab="view-alerts" role="tab" aria-selected="false">
+        <span>Trigger Settings</span>
       </button>
     </nav>
 
-    <!-- VIEW 1: Live Multi-Tab Sessions (with Per-Tab Check/Uncheck & Per-Site Sound Assignment) -->
+    <!-- VIEW 1: Open Sessions + Per-Session Sound Selector + Output Gain -->
     <main class="view active" id="view-sessions" role="tabpanel">
       <div class="section-bar">
-        <h2 class="section-heading">Open AI tabs (uncheck any site to mute)</h2>
+        <h2 class="section-heading">Active AI tabs (uncheck to silence, pick sound per tab)</h2>
         <button id="refreshTabsBtn" class="ghost-action" title="Rescan Chrome tabs">
           <svg class="svg-icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M13.5 8a5.5 5.5 0 1 1-1.4-3.7"></path>
@@ -80,6 +86,15 @@
         <!-- Populated dynamically with open AI tabs across all windows -->
       </div>
 
+      <!-- Output Gain moved directly into Open Sessions -->
+      <div class="fader-block">
+        <div class="fader-header">
+          <label for="volumeSlider" class="fader-label">Output gain (Master volume)</label>
+          <output id="volumeLabel" class="fader-readout">85%</output>
+        </div>
+        <input type="range" id="volumeSlider" min="5" max="100" value="85" class="fader-input">
+      </div>
+
       <div class="section-bar section-bar-spaced">
         <h2 class="section-heading">Recent completions</h2>
         <button id="clearHistoryBtn" class="ghost-action">Clear</button>
@@ -90,80 +105,24 @@
       </div>
     </main>
 
-    <!-- VIEW 2: Acoustic Studio & Computer System Notifications -->
-    <main class="view" id="view-sound" role="tabpanel">
+    <!-- VIEW 2: Trigger Conditions & Computer System Notification -->
+    <main class="view" id="view-alerts" role="tabpanel">
       <div class="section-bar">
-        <h2 class="section-heading">Default acoustic signature</h2>
-        <button id="testSoundBtn" class="primary-action" title="Audition selected tone">
-          <svg class="svg-icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="3 5.5 6.5 5.5 10.5 2.5 10.5 13.5 6.5 10.5 3 10.5"></polygon>
-            <path d="M13 5.5a3.5 3.5 0 0 1 0 5"></path>
-          </svg>
-          <span>Audition</span>
-        </button>
-      </div>
-
-      <div class="tone-list" id="presetGrid" role="radiogroup" aria-label="Chime Tone">
-        <button class="tone-row active" data-preset="pro_chime" role="radio" aria-checked="true">
-          <span class="tone-radio"></span>
-          <span class="tone-name">Pro Chime</span>
-          <span class="tone-spec">F#5 → B5 · Default for Gemini</span>
-        </button>
-        <button class="tone-row" data-preset="warm_marimba" role="radio" aria-checked="false">
-          <span class="tone-radio"></span>
-          <span class="tone-name">Warm Marimba</span>
-          <span class="tone-spec">G4 → D5 → B5 · Default for Claude</span>
-        </button>
-        <button class="tone-row" data-preset="crystal_triad" role="radio" aria-checked="false">
-          <span class="tone-radio"></span>
-          <span class="tone-name">Crystal Triad</span>
-          <span class="tone-spec">D5 → F#5 → D6 · Default for ChatGPT</span>
-        </button>
-        <button class="tone-row" data-preset="double_pulse" role="radio" aria-checked="false">
-          <span class="tone-radio"></span>
-          <span class="tone-name">Studio Pulse</span>
-          <span class="tone-spec">A5 → D6 · Default for DeepSeek &amp; Grok</span>
-        </button>
-        <button class="tone-row" data-preset="soft_harp" role="radio" aria-checked="false">
-          <span class="tone-radio"></span>
-          <span class="tone-name">Celestial Harp</span>
-          <span class="tone-spec">C5 → C6 · Default for Notion &amp; Kimi</span>
-        </button>
-        <button class="tone-row" data-preset="gentle_zen" role="radio" aria-checked="false">
-          <span class="tone-radio"></span>
-          <span class="tone-name">Resonant Bowl</span>
-          <span class="tone-spec">528 Hz · Default for Perplexity</span>
-        </button>
-      </div>
-
-      <div class="fader-block">
-        <div class="fader-header">
-          <label for="volumeSlider" class="fader-label">Output gain</label>
-          <output id="volumeLabel" class="fader-readout">85%</output>
-        </div>
-        <input type="range" id="volumeSlider" min="5" max="100" value="85" class="fader-input">
-      </div>
-
-      <div class="section-bar section-bar-spaced">
         <h2 class="section-heading">Trigger conditions</h2>
-        <button id="testSystemNotifBtn" class="ghost-action" title="Send a test notification to your computer system">
-          <span>Test OS Alert</span>
+        <button id="testSystemNotifBtn" class="primary-action" title="Send a real test notification to your computer system">
+          <svg class="svg-icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="12" height="9" rx="1.5"></rect>
+            <path d="M5.5 14h5"></path>
+          </svg>
+          <span id="testOsBtnLabel">Test Computer Alert</span>
         </button>
       </div>
 
       <div class="rule-stack">
         <label class="rule-row">
           <div class="rule-copy">
-            <span class="rule-title">Distinct sound for each AI website</span>
-            <span class="rule-desc">Assigns a unique chime to Gemini, Claude, ChatGPT, DeepSeek &amp; others</span>
-          </div>
-          <input type="checkbox" id="distinctSiteSoundsToggle" class="rule-check" checked>
-        </label>
-
-        <label class="rule-row">
-          <div class="rule-copy">
             <span class="rule-title">Computer system notification (OS Banner)</span>
-            <span class="rule-desc">Shows native Windows / macOS notification on your laptop when finished</span>
+            <span class="rule-desc">Shows a native Windows / macOS notification banner on your laptop when any checked AI chat finishes</span>
           </div>
           <input type="checkbox" id="desktopNotificationToggle" class="rule-check" checked>
         </label>
@@ -171,15 +130,23 @@
         <label class="rule-row">
           <div class="rule-copy">
             <span class="rule-title">Top-bar notification banner</span>
-            <span class="rule-desc">Displays completion bar with site name and sound tone at the top</span>
+            <span class="rule-desc">Slides down a completion pill at the top of the page with the AI site name and sound played</span>
           </div>
           <input type="checkbox" id="inPageTopBannerToggle" class="rule-check" checked>
         </label>
 
         <label class="rule-row">
           <div class="rule-copy">
+            <span class="rule-title">Play completion sound</span>
+            <span class="rule-desc">Plays the sound assigned to each AI tab in Open Sessions</span>
+          </div>
+          <input type="checkbox" id="soundEnabledToggle" class="rule-check" checked>
+        </label>
+
+        <label class="rule-row">
+          <div class="rule-copy">
             <span class="rule-title">Background tabs only</span>
-            <span class="rule-desc">Silence alerts when you are already viewing that AI chat tab</span>
+            <span class="rule-desc">Only trigger sound and notifications when you are in another tab or app</span>
           </div>
           <input type="checkbox" id="onlyWhenUnfocusedToggle" class="rule-check">
         </label>

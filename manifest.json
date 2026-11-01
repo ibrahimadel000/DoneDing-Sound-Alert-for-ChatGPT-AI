@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "DoneDing",
-  "version": "6.0.0",
-  "description": "Multi-tab AI chat completion monitor with distinct per-site acoustic chimes, top-bar alerts, and native computer system notifications.",
+  "version": "7.0.0",
+  "description": "Multi-tab AI chat completion monitor with per-session sound selection, redesigned top-bar alerts, and computer system notifications.",
   "permissions": [
     "storage",
     "notifications",
