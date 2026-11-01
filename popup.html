@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>AI Chat Completion Sound</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="brand">
+        <img src="icons/icon48.png" alt="Logo" class="logo">
+        <div>
+          <h1>AI Chime Notifier</h1>
+          <p class="subtitle" id="statusSubtitle">Active on all AI Chats</p>
+        </div>
+      </div>
+      <label class="switch" title="Master Enable/Disable">
+        <input type="checkbox" id="enabledToggle" checked>
+        <span class="slider"></span>
+      </label>
+    </header>
+
+    <section class="status-card" id="siteStatusCard">
+      <div class="status-indicator">
+        <span class="dot" id="liveDot"></span>
+        <span id="siteNameText">Ready for AI chat tabs</span>
+      </div>
+      <span class="badge" id="generationBadge">Idle</span>
+    </section>
+
+    <section class="card">
+      <div class="section-title">Sound &amp; Chime Settings</div>
+
+      <div class="control-row">
+        <label for="soundPreset">Chime Tone</label>
+        <div class="select-group">
+          <select id="soundPreset">
+            <option value="pro_chime">Pro Chime (F#5 → B5 Original)</option>
+            <option value="crystal_triad">Crystal Triad (Arpeggio)</option>
+            <option value="warm_marimba">Warm Marimba</option>
+            <option value="gentle_zen">Zen Singing Bowl</option>
+            <option value="double_pulse">Modern Double Pulse</option>
+          </select>
+          <button id="testSoundBtn" class="btn-test" title="Preview Chime">🔔 Test</button>
+        </div>
+      </div>
+
+      <div class="control-row">
+        <div class="label-with-val">
+          <label for="volumeSlider">Volume</label>
+          <span id="volumeLabel">85%</span>
+        </div>
+        <input type="range" id="volumeSlider" min="5" max="100" value="85" class="range-slider">
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-title">Notification Behavior</div>
+
+      <label class="checkbox-row">
+        <span>Play sound on completion</span>
+        <input type="checkbox" id="soundEnabledToggle" checked>
+      </label>
+
+      <label class="checkbox-row">
+        <span>Only alert when tab is in background</span>
+        <input type="checkbox" id="onlyWhenUnfocusedToggle">
+      </label>
+
+      <label class="checkbox-row">
+        <span>Show Desktop Banner Notification</span>
+        <input type="checkbox" id="desktopNotificationToggle" checked>
+      </label>
+
+      <label class="checkbox-row">
+        <span>Flash 🔔 in tab title when unfocused</span>
+        <input type="checkbox" id="titleBadgeAlertToggle" checked>
+      </label>
+
+      <div class="control-row compact">
+        <label for="minDurationInput">Min response time (ms)</label>
+        <input type="number" id="minDurationInput" min="100" max="10000" step="100" value="500" class="num-input">
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span id="statsCounter">0 completions tracked</span>
+      <span class="platforms-hint">Gemini · Claude · ChatGPT · Notion · DeepSeek</span>
+    </footer>
+  </div>
+
+  <script src="sound_engine.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

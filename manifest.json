@@ -1,0 +1,93 @@
+{
+  "manifest_version": 3,
+  "name": "AI Chat Completion Sound & Notifier",
+  "version": "3.0.0",
+  "description": "Plays a pleasant chime and optional desktop notification when Gemini, Claude, ChatGPT, Notion AI, Perplexity, DeepSeek, or Copilot finishes generating.",
+  "permissions": [
+    "storage",
+    "notifications",
+    "offscreen"
+  ],
+  "host_permissions": [
+    "*://*.gemini.google.com/*",
+    "*://gemini.google.com/*",
+    "*://*.aistudio.google.com/*",
+    "*://aistudio.google.com/*",
+    "*://*.claude.ai/*",
+    "*://claude.ai/*",
+    "*://*.chatgpt.com/*",
+    "*://chatgpt.com/*",
+    "*://*.chat.openai.com/*",
+    "*://chat.openai.com/*",
+    "*://*.notion.com/*",
+    "*://notion.com/*",
+    "*://*.notion.so/*",
+    "*://notion.so/*",
+    "*://*.notion.site/*",
+    "*://*.perplexity.ai/*",
+    "*://perplexity.ai/*",
+    "*://*.deepseek.com/*",
+    "*://chat.deepseek.com/*",
+    "*://*.copilot.microsoft.com/*",
+    "*://copilot.microsoft.com/*",
+    "*://*.poe.com/*",
+    "*://poe.com/*",
+    "*://*.grok.com/*",
+    "*://grok.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AI Chat Completion Sound Settings",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.gemini.google.com/*",
+        "*://gemini.google.com/*",
+        "*://*.aistudio.google.com/*",
+        "*://aistudio.google.com/*",
+        "*://*.claude.ai/*",
+        "*://claude.ai/*",
+        "*://*.chatgpt.com/*",
+        "*://chatgpt.com/*",
+        "*://*.chat.openai.com/*",
+        "*://chat.openai.com/*",
+        "*://*.notion.com/*",
+        "*://notion.com/*",
+        "*://*.notion.so/*",
+        "*://notion.so/*",
+        "*://*.notion.site/*",
+        "*://*.perplexity.ai/*",
+        "*://perplexity.ai/*",
+        "*://*.deepseek.com/*",
+        "*://chat.deepseek.com/*",
+        "*://*.copilot.microsoft.com/*",
+        "*://copilot.microsoft.com/*",
+        "*://*.poe.com/*",
+        "*://poe.com/*",
+        "*://*.grok.com/*",
+        "*://grok.com/*"
+      ],
+      "js": [
+        "sound_engine.js",
+        "content.js"
+      ],
+      "run_at": "document_end"
+    }
+  ]
+}
