@@ -101,8 +101,9 @@ The completion-detection scripts are configured for the supported AI sites liste
 - **Price:** Free for the current release
 - **Chrome Web Store listing:** Coming soon
 
-<b>Acknowledgements</b><br />
-A special thank-you to [Khalil AL-Rahman Moftah](https://github.com/moftahykh) (<code>@moftahykh</code>) for helping me with this project. ❤️
+## Acknowledgements
+
+- <b>Special thanks:</b> [Khalil AL-Rahman Moftah](https://github.com/moftahykh) (<code>@moftahykh</code>) for helping me with this project. ❤️
 
 ## License
 
