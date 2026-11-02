@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="480" viewBox="0 0 1200 480" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">DoneDing — AI completion alerts</title>
+  <desc id="desc">A polished 3D-style illustration of AI chat windows and a glowing notification bell with sound waves.</desc>
+  <defs>
+    <linearGradient id="bg" x1="70" y1="24" x2="1128" y2="472" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#101C34"/>
+      <stop offset=".52" stop-color="#0C1322"/>
+      <stop offset="1" stop-color="#11101D"/>
+    </linearGradient>
+    <radialGradient id="glowA" cx="0" cy="0" r="1" gradientTransform="matrix(0 245 -390 0 617 245)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F59E0B" stop-opacity=".19"/>
+      <stop offset="1" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowB" cx="0" cy="0" r="1" gradientTransform="matrix(0 195 -310 0 250 180)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3687FF" stop-opacity=".15"/>
+      <stop offset="1" stop-color="#3687FF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#253653" stop-opacity=".91"/>
+      <stop offset="1" stop-color="#151E30" stop-opacity=".9"/>
+    </linearGradient>
+    <linearGradient id="glassFront" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#293A59"/>
+      <stop offset="1" stop-color="#151D2E"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="548" y1="164" x2="656" y2="304" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE29A"/>
+      <stop offset=".48" stop-color="#FFB84D"/>
+      <stop offset="1" stop-color="#EF7C24"/>
+    </linearGradient>
+    <linearGradient id="goldEdge" x1="547" y1="176" x2="657" y2="288" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF2C6" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#F38B34" stop-opacity=".45"/>
+    </linearGradient>
+    <linearGradient id="blueLine" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#7CB8FF" stop-opacity=".85"/>
+      <stop offset="1" stop-color="#80D6F5" stop-opacity=".35"/>
+    </linearGradient>
+    <linearGradient id="warmLine" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#FFC477" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#F39650" stop-opacity=".25"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="13"/>
+      <feOffset dy="15"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".34"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softGlow" x="-100%" y="-100%" width="300%" height="300%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="34" height="34" patternUnits="userSpaceOnUse">
+      <path d="M34 0H0V34" stroke="#C7D8F4" stroke-opacity=".035" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="480" rx="30" fill="url(#bg)"/>
+  <rect width="1200" height="480" rx="30" fill="url(#glowA)"/>
+  <rect width="1200" height="480" rx="30" fill="url(#glowB)"/>
+  <rect width="1200" height="480" rx="30" fill="url(#grid)"/>
+  <rect x="1" y="1" width="1198" height="478" rx="29" stroke="#A7BAD8" stroke-opacity=".13" stroke-width="2"/>
+
+  <!-- Back layer: two quiet AI chat windows -->
+  <g transform="rotate(-8 260 223)" filter="url(#shadow)">
+    <rect x="88" y="113" width="344" height="230" rx="23" fill="#080D18" fill-opacity=".68"/>
+    <rect x="82" y="103" width="344" height="230" rx="23" fill="url(#glass)" stroke="#7EA9E2" stroke-opacity=".27" stroke-width="1.5"/>
+    <path d="M83 151H425" stroke="#91A9CC" stroke-opacity=".18"/>
+    <circle cx="108" cy="128" r="5" fill="#FF8D79"/><circle cx="126" cy="128" r="5" fill="#F8C56A"/><circle cx="144" cy="128" r="5" fill="#65C99B"/>
+    <rect x="108" y="174" width="107" height="12" rx="6" fill="#77B5FF" fill-opacity=".78"/>
+    <rect x="108" y="197" width="265" height="8" rx="4" fill="#D8E5F8" fill-opacity=".27"/>
+    <rect x="108" y="214" width="229" height="8" rx="4" fill="#D8E5F8" fill-opacity=".19"/>
+    <rect x="108" y="241" width="210" height="8" rx="4" fill="#D8E5F8" fill-opacity=".23"/>
+    <rect x="108" y="258" width="250" height="8" rx="4" fill="#D8E5F8" fill-opacity=".15"/>
+    <circle cx="119" cy="296" r="8" fill="#50C7A5" fill-opacity=".9"/>
+    <rect x="137" y="291" width="117" height="9" rx="4.5" fill="#B8CDE9" fill-opacity=".35"/>
+  </g>
+
+  <g transform="rotate(7 954 201)" filter="url(#shadow)">
+    <rect x="792" y="106" width="323" height="211" rx="23" fill="#080D18" fill-opacity=".72"/>
+    <rect x="786" y="96" width="323" height="211" rx="23" fill="url(#glass)" stroke="#69CFC7" stroke-opacity=".24" stroke-width="1.5"/>
+    <path d="M787 144H1108" stroke="#91A9CC" stroke-opacity=".17"/>
+    <circle cx="812" cy="121" r="5" fill="#FF8D79"/><circle cx="830" cy="121" r="5" fill="#F8C56A"/><circle cx="848" cy="121" r="5" fill="#65C99B"/>
+    <rect x="813" y="166" width="96" height="11" rx="5.5" fill="#7EDAD0" fill-opacity=".74"/>
+    <rect x="813" y="190" width="247" height="8" rx="4" fill="#D8E5F8" fill-opacity=".24"/>
+    <rect x="813" y="207" width="211" height="8" rx="4" fill="#D8E5F8" fill-opacity=".16"/>
+    <rect x="813" y="235" width="183" height="8" rx="4" fill="#D8E5F8" fill-opacity=".21"/>
+    <rect x="813" y="252" width="232" height="8" rx="4" fill="#D8E5F8" fill-opacity=".14"/>
+    <circle cx="1082" cy="276" r="10" fill="#65D1C2" fill-opacity=".18"/>
+    <circle cx="1082" cy="276" r="4" fill="#7EE3D4"/>
+  </g>
+
+  <!-- Sound rings sit behind the notification bell -->
+  <ellipse cx="600" cy="237" rx="169" ry="110" stroke="#7BB6FF" stroke-opacity=".12" stroke-width="2"/>
+  <ellipse cx="600" cy="237" rx="143" ry="92" stroke="#78D8D1" stroke-opacity=".17" stroke-width="2"/>
+  <ellipse cx="600" cy="237" rx="119" ry="76" stroke="#FFBF66" stroke-opacity=".2" stroke-width="2"/>
+  <path d="M462 238c0-77 62-139 138-139s138 62 138 139" stroke="#79B9FF" stroke-opacity=".35" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 11"/>
+  <path d="M504 237c0-53 43-96 96-96s96 43 96 96" stroke="#FFD08A" stroke-opacity=".52" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="3 9"/>
+
+  <!-- Main 3D notification object -->
+  <ellipse cx="600" cy="351" rx="95" ry="18" fill="#FF9B39" fill-opacity=".16" filter="url(#softGlow)"/>
+  <ellipse cx="600" cy="344" rx="71" ry="16" fill="#111A2A" stroke="#F8B75F" stroke-opacity=".4" stroke-width="1.5"/>
+  <ellipse cx="600" cy="340" rx="59" ry="10" fill="#22324A" stroke="#FFE0A4" stroke-opacity=".42"/>
+  <circle cx="600" cy="228" r="81" fill="#FF9A35" fill-opacity=".11" filter="url(#softGlow)"/>
+  <circle cx="600" cy="228" r="66" fill="#101828" fill-opacity=".92" stroke="#FFC36B" stroke-opacity=".42" stroke-width="2"/>
+  <circle cx="600" cy="228" r="57" fill="url(#glassFront)" stroke="#F9D08A" stroke-opacity=".25"/>
+  <path d="M600 170c-25 0-42 20-42 47v28c0 15-8 25-17 34h118c-9-9-17-19-17-34v-28c0-27-17-47-42-47Z" fill="url(#amber)" stroke="url(#goldEdge)" stroke-width="2"/>
+  <path d="M585 283c2 10 7 15 15 15s13-5 15-15" stroke="#FFE8B4" stroke-width="5" stroke-linecap="round"/>
+  <path d="M592 165c1-8 4-12 8-12s7 4 8 12" stroke="#FFE4A7" stroke-opacity=".88" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="647" cy="181" r="7" fill="#FFE1A0" filter="url(#softGlow)"/>
+  <circle cx="550" cy="288" r="5" fill="#78D8D1"/>
+  <circle cx="663" cy="281" r="4" fill="#84BFFF"/>
+
+  <!-- Foreground completion card -->
+  <g transform="rotate(-3 868 371)" filter="url(#shadow)">
+    <rect x="762" y="335" width="266" height="76" rx="19" fill="#101827" stroke="#F6B95F" stroke-opacity=".48" stroke-width="1.4"/>
+    <circle cx="793" cy="373" r="17" fill="#F8AD50" fill-opacity=".17"/>
+    <path d="m785 373 6 6 11-13" stroke="#FFD28B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="824" y="357" width="132" height="9" rx="4.5" fill="url(#warmLine)"/>
+    <rect x="824" y="376" width="174" height="7" rx="3.5" fill="#D7E2F3" fill-opacity=".25"/>
+  </g>
+
+  <circle cx="471" cy="367" r="3" fill="#78D8D1" fill-opacity=".7"/>
+  <circle cx="715" cy="107" r="4" fill="#84BFFF" fill-opacity=".75"/>
+  <circle cx="744" cy="390" r="3" fill="#FFD08A" fill-opacity=".8"/>
+  <path d="M104 387h217" stroke="url(#blueLine)" stroke-opacity=".28" stroke-width="2" stroke-linecap="round"/>
+  <path d="M914 72h171" stroke="url(#warmLine)" stroke-opacity=".27" stroke-width="2" stroke-linecap="round"/>
+</svg>

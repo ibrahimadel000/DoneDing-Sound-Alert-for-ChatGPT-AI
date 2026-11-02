@@ -87,77 +87,175 @@
         return Boolean(stopBtn && isElementVisible(stopBtn));
     }
 
-    // Strictly scoped to Notion AI Chat ONLY — ignores Notion Settings modals, [role="dialog"], and regular page buttons!
-    function isInsideNotionAIChat(el) {
-        if (!el) return false;
-        // 1. Never trigger inside Notion Settings & Members modal or general settings dialogs
-        const dialog = el.closest('[role="dialog"]');
-        if (dialog) {
-            const dialogLabel = (dialog.getAttribute('aria-label') || '').toLowerCase();
-            if (dialogLabel.includes('setting') || dialogLabel.includes('إعدادات') || dialog.querySelector('[class*="settings" i]')) {
-                return false;
-            }
-        }
+    // --- Notion AI Chat Detector (v8.3) ---
+    // Tracks the AI Chat Composer Send->Stop button transformation & active AI status without premature timeouts!
+    const notionIdleSvgByComposer = new WeakMap();
 
-        // 2. Check if element is inside an explicit Notion AI chat panel/sidebar or prompt box
-        if (el.closest('[class*="ai-chat" i], [class*="notion-ai" i], [data-testid*="ai-chat" i], [data-testid*="notion-ai" i]')) {
+    function isInsideNotionSettings(el) {
+        if (!el || el.nodeType !== 1) return false;
+        if (el.closest('.notion-settings, [class*="settings-modal" i], [aria-label*="Settings" i], [aria-label*="الإعدادات" i]')) {
             return true;
         }
-
-        // 3. Or check if the element shares a chat panel/composer container with a Notion AI prompt input
-        let parent = el.parentElement;
-        for (let depth = 0; depth < 7 && parent && parent !== document.body; depth++) {
-            const promptInput = parent.querySelector(
-                '[contenteditable="true"][placeholder*="AI" i], ' +
-                '[contenteditable="true"][placeholder*="Ask" i], ' +
-                '[contenteditable="true"][placeholder*="anything" i], ' +
-                '[contenteditable="true"][placeholder*="follow-up" i], ' +
-                '[contenteditable="true"][placeholder*="reply" i], ' +
-                '[contenteditable="true"][placeholder*="اسأل" i], ' +
-                'textarea[placeholder*="AI" i], ' +
-                'textarea[placeholder*="Ask" i]'
-            );
-            if (promptInput && isElementVisible(promptInput)) {
+        const dialog = el.closest('[role="dialog"]');
+        if (dialog) {
+            const txt = (dialog.textContent || '').slice(0, 400);
+            if (/(My account|My settings|My notifications|Workspace settings|Billing|Upgrade plan|Security & data|Connections)/i.test(txt)) {
                 return true;
             }
-            parent = parent.parentElement;
         }
         return false;
     }
 
+    // Find all open Notion AI Chat composer boxes (outside .notion-page-content & Settings)
+    function getNotionAIChatContainers() {
+        const containers = [];
+        const inputs = document.querySelectorAll('[contenteditable="true"], textarea, [role="textbox"]');
+        for (const inp of inputs) {
+            if (!isElementVisible(inp)) continue;
+            if (inp.closest('.notion-page-content') && !inp.closest('.notion-overlay-container')) continue;
+            if (isInsideNotionSettings(inp)) continue;
+
+            const rect = inp.getBoundingClientRect();
+            if (rect.width < 90 || rect.height > 320) continue;
+
+            // Walk up to find the compact composer container (height <= 260px) that holds both the input and its submit/stop button
+            let composerBox = inp.parentElement;
+            for (let i = 0; i < 6 && composerBox && composerBox !== document.body; i++) {
+                const r = composerBox.getBoundingClientRect();
+                const btns = composerBox.querySelectorAll('button, [role="button"]');
+                if (btns.length >= 1 && r.height >= 28 && r.height <= 260 && r.width >= 150 && r.width <= 960) {
+                    break;
+                }
+                composerBox = composerBox.parentElement;
+            }
+            if (composerBox && composerBox !== document.body) {
+                containers.push({ input: inp, composerBox });
+            }
+        }
+        return containers;
+    }
+
+    // Find the primary Send/Stop action button (bottom-right button with an SVG) inside a Notion AI Chat composer box
+    function getComposerPrimaryButton(composerBox) {
+        const btns = Array.from(composerBox.querySelectorAll('button, [role="button"]')).filter(b => {
+            if (!isElementVisible(b)) return false;
+            const r = b.getBoundingClientRect();
+            return r.width >= 18 && r.width <= 52 && r.height >= 18 && r.height <= 52 && Boolean(b.querySelector('svg'));
+        });
+        if (btns.length === 0) return null;
+        // Pick the rightmost button in the bottom half of the composer box
+        btns.sort((a, b) => {
+            const ra = a.getBoundingClientRect();
+            const rb = b.getBoundingClientRect();
+            return (rb.right + rb.bottom * 0.5) - (ra.right + ra.bottom * 0.5);
+        });
+        return btns[0];
+    }
+
+    function isButtonDisabledOrDimmed(btn) {
+        if (!btn) return true;
+        if (btn.disabled || btn.getAttribute('aria-disabled') === 'true') return true;
+        const style = window.getComputedStyle(btn);
+        if (style.pointerEvents === 'none' || style.cursor === 'not-allowed' || style.cursor === 'default') return true;
+        if (parseFloat(style.opacity || '1') < 0.65) return true;
+        return false;
+    }
+
+    // Record the Send button's SVG when the user is typing (before pressing Enter) or when the button is idle/disabled
+    if (location.hostname.includes('notion')) {
+        window.addEventListener('input', () => {
+            const chatContainers = getNotionAIChatContainers();
+            for (const c of chatContainers) {
+                const txt = (c.input.textContent || c.input.value || '').trim();
+                if (txt.length > 0) {
+                    const primaryBtn = getComposerPrimaryButton(c.composerBox);
+                    const svg = primaryBtn?.querySelector('svg');
+                    if (svg && !notionIdleSvgByComposer.has(c.composerBox)) {
+                        notionIdleSvgByComposer.set(c.composerBox, svg.innerHTML);
+                    }
+                }
+            }
+        }, true);
+    }
+
     function checkNotionGenerating() {
-        // 1. Check only explicit Stop buttons inside the Notion AI Chat composer
-        const candidates = document.querySelectorAll(
+        // 1. Check explicit Stop / Cancel buttons anywhere outside Settings
+        const clickable = document.querySelectorAll(
             'button, [role="button"], [data-testid*="stop" i], [aria-label*="stop" i]'
         );
 
-        for (const el of candidates) {
+        for (const el of clickable) {
             if (!isElementVisible(el)) continue;
+            if (isInsideNotionSettings(el)) continue;
 
             const aria = (el.getAttribute('aria-label') || '').trim().toLowerCase();
             const title = (el.getAttribute('title') || '').trim().toLowerCase();
-            const text = (el.textContent || '').trim().toLowerCase();
-
-            // Explicit AI stop phrases ("stop generating", "stop writing", "esc to stop")
-            if (/^(stop generating|stop writing|stop response|esc to stop|إيقاف الرد)$/i.test(aria) ||
-                /^(stop generating|stop writing|stop response|esc to stop|إيقاف الرد)$/i.test(title) ||
-                /^(stop generating|stop writing|esc to stop)$/i.test(text)) {
+            if (
+                aria === 'stop' ||
+                aria.includes('stop generating') ||
+                aria.includes('stop writing') ||
+                aria.includes('stop response') ||
+                aria.includes('إيقاف') ||
+                title === 'stop' ||
+                title.includes('stop generating') ||
+                title.includes('esc to stop')
+            ) {
                 return true;
             }
 
-            // If a button is labeled "Stop" / "إيقاف", require it to be strictly inside the Notion AI Chat composer
-            if ((aria === 'stop' || aria === 'إيقاف' || title === 'stop') && isInsideNotionAIChat(el)) {
+            const text = (el.textContent || '').trim().toLowerCase();
+            if (/^(stop|stop generating|stop writing|esc to stop|إيقاف)$/i.test(text)) {
                 return true;
             }
         }
 
-        // 2. Check leaf status indicators ("Thinking...", "Writing...", "Generating...") strictly inside Notion AI Chat
-        const statusLeafs = document.querySelectorAll('span, div');
-        for (const leaf of statusLeafs) {
-            if (leaf.children.length > 0) continue;
-            const txt = (leaf.textContent || '').trim();
-            if (txt.length > 0 && txt.length <= 24 && /^(Thinking\.\.\.|Writing\.\.\.|Generating\.\.\.)$/i.test(txt)) {
-                if (isElementVisible(leaf) && isInsideNotionAIChat(leaf)) {
+        // 2. Check for active Notion AI status text ("Thinking...", "Writing...", "Generating...", "Searching...", "Reading...", "Esc to stop")
+        const overlaysAndPanels = document.querySelectorAll(
+            '.notion-overlay-container, [class*="notion-ai" i], [class*="ai-panel" i], [class*="ai-chat" i], aside, [role="complementary"], [role="dialog"]'
+        );
+        for (const container of overlaysAndPanels) {
+            if (!isElementVisible(container) || isInsideNotionSettings(container)) continue;
+            const text = container.textContent || '';
+            if (/(Stop generating|Esc to stop|Writing\.{2,3}|Thinking\.{2,3}|Generating\.{2,3}|Searching\.{2,3}|Reading\.{2,3}|Analyzing\.{2,3})/i.test(text)) {
+                return true;
+            }
+        }
+
+        // 3. Check the Notion AI Chat Composer's primary Send/Stop button
+        const chatContainers = getNotionAIChatContainers();
+        for (const c of chatContainers) {
+            const primaryBtn = getComposerPrimaryButton(c.composerBox);
+            if (!primaryBtn) continue;
+            const svg = primaryBtn.querySelector('svg');
+            if (!svg) continue;
+
+            const inputTxt = (c.input.textContent || c.input.value || '').trim();
+            const isDisabled = isButtonDisabledOrDimmed(primaryBtn);
+
+            // If the button is currently disabled/dimmed (idle with empty input), snapshot its SVG as the idle Send icon
+            if (isDisabled && !notionIdleSvgByComposer.has(c.composerBox)) {
+                notionIdleSvgByComposer.set(c.composerBox, svg.innerHTML);
+            }
+
+            // Check A: Does the SVG inside the composer button have a <rect> stop square?
+            const rects = svg.querySelectorAll('rect');
+            const paths = svg.querySelectorAll('path');
+            if (rects.length === 1 && paths.length <= 1 && !isDisabled) {
+                return true;
+            }
+
+            // Check B: Did the composer's primary button SVG change from its recorded idle Send SVG while remaining enabled?
+            const idleSvg = notionIdleSvgByComposer.get(c.composerBox);
+            if (idleSvg && svg.innerHTML !== idleSvg && !isDisabled) {
+                return true;
+            }
+
+            // Check C: If the chat input box was just cleared (inputTxt === '') yet the primary submit button is STILL enabled/active,
+            // it means the button is currently acting as the Stop button during generation!
+            if (inputTxt.length === 0 && !isDisabled) {
+                const aria = (primaryBtn.getAttribute('aria-label') || '').toLowerCase();
+                // Make sure it's not a voice/microphone or attachment button
+                if (!aria.includes('voice') && !aria.includes('audio') && !aria.includes('attach') && !aria.includes('add')) {
                     return true;
                 }
             }
@@ -367,7 +465,7 @@
                 } else {
                     syncStateWithBackground(false);
                 }
-            }, 350);
+            }, location.hostname.includes('notion') ? 1500 : 400);
         }
     }
 
