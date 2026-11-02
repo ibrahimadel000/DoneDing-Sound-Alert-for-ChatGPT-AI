@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/doneding-hero.svg" alt="3D-style illustration of DoneDing's AI completion alerts" width="100%" />
+  <img src="./assets/doneding-hero.png" alt="3D-style illustration of DoneDing's AI completion alerts" width="100%" />
 </p>
 
 <h1 align="center">DoneDing</h1>
