@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DoneDing",
-  "version": "8.0.0",
+  "version": "8.1.0",
   "description": "Browser-wide top-bar completion banner, per-session distinct chimes, and system notifications for all AI chat websites.",
   "permissions": [
     "storage",

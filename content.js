@@ -87,39 +87,79 @@
         return Boolean(stopBtn && isElementVisible(stopBtn));
     }
 
+    // Strictly scoped to Notion AI Chat ONLY — ignores Notion Settings modals, [role="dialog"], and regular page buttons!
+    function isInsideNotionAIChat(el) {
+        if (!el) return false;
+        // 1. Never trigger inside Notion Settings & Members modal or general settings dialogs
+        const dialog = el.closest('[role="dialog"]');
+        if (dialog) {
+            const dialogLabel = (dialog.getAttribute('aria-label') || '').toLowerCase();
+            if (dialogLabel.includes('setting') || dialogLabel.includes('إعدادات') || dialog.querySelector('[class*="settings" i]')) {
+                return false;
+            }
+        }
+
+        // 2. Check if element is inside an explicit Notion AI chat panel/sidebar or prompt box
+        if (el.closest('[class*="ai-chat" i], [class*="notion-ai" i], [data-testid*="ai-chat" i], [data-testid*="notion-ai" i]')) {
+            return true;
+        }
+
+        // 3. Or check if the element shares a chat panel/composer container with a Notion AI prompt input
+        let parent = el.parentElement;
+        for (let depth = 0; depth < 7 && parent && parent !== document.body; depth++) {
+            const promptInput = parent.querySelector(
+                '[contenteditable="true"][placeholder*="AI" i], ' +
+                '[contenteditable="true"][placeholder*="Ask" i], ' +
+                '[contenteditable="true"][placeholder*="anything" i], ' +
+                '[contenteditable="true"][placeholder*="follow-up" i], ' +
+                '[contenteditable="true"][placeholder*="reply" i], ' +
+                '[contenteditable="true"][placeholder*="اسأل" i], ' +
+                'textarea[placeholder*="AI" i], ' +
+                'textarea[placeholder*="Ask" i]'
+            );
+            if (promptInput && isElementVisible(promptInput)) {
+                return true;
+            }
+            parent = parent.parentElement;
+        }
+        return false;
+    }
+
     function checkNotionGenerating() {
-        const clickable = document.querySelectorAll(
+        // 1. Check only explicit Stop buttons inside the Notion AI Chat composer
+        const candidates = document.querySelectorAll(
             'button, [role="button"], [data-testid*="stop" i], [aria-label*="stop" i]'
         );
 
-        for (const el of clickable) {
+        for (const el of candidates) {
             if (!isElementVisible(el)) continue;
 
-            const aria = (el.getAttribute('aria-label') || '').toLowerCase();
-            const title = (el.getAttribute('title') || '').toLowerCase();
-            if (aria.includes('stop') || aria.includes('إيقاف') || title.includes('stop')) {
+            const aria = (el.getAttribute('aria-label') || '').trim().toLowerCase();
+            const title = (el.getAttribute('title') || '').trim().toLowerCase();
+            const text = (el.textContent || '').trim().toLowerCase();
+
+            // Explicit AI stop phrases ("stop generating", "stop writing", "esc to stop")
+            if (/^(stop generating|stop writing|stop response|esc to stop|إيقاف الرد)$/i.test(aria) ||
+                /^(stop generating|stop writing|stop response|esc to stop|إيقاف الرد)$/i.test(title) ||
+                /^(stop generating|stop writing|esc to stop)$/i.test(text)) {
                 return true;
             }
 
-            const text = el.textContent.trim().toLowerCase();
-            if (/^(stop|stop generating|stop writing|esc to stop)/i.test(text)) {
-                return true;
-            }
-
-            const stopSquare = el.querySelector('svg rect, svg [d*="M2"], svg [d*="M3"]');
-            if (stopSquare && el.closest('[class*="chat"], [class*="prompt"], [role="dialog"], form')) {
+            // If a button is labeled "Stop" / "إيقاف", require it to be strictly inside the Notion AI Chat composer
+            if ((aria === 'stop' || aria === 'إيقاف' || title === 'stop') && isInsideNotionAIChat(el)) {
                 return true;
             }
         }
 
-        const overlays = document.querySelectorAll(
-            '.notion-overlay-container, [class*="notion-ai"], [class*="ai-panel"], [role="dialog"]'
-        );
-        for (const container of overlays) {
-            if (!isElementVisible(container)) continue;
-            const text = container.textContent;
-            if (/\b(Stop generating|Esc to stop|Writing\.\.\.|Thinking\.\.\.|Generating\.\.\.)/i.test(text)) {
-                return true;
+        // 2. Check leaf status indicators ("Thinking...", "Writing...", "Generating...") strictly inside Notion AI Chat
+        const statusLeafs = document.querySelectorAll('span, div');
+        for (const leaf of statusLeafs) {
+            if (leaf.children.length > 0) continue;
+            const txt = (leaf.textContent || '').trim();
+            if (txt.length > 0 && txt.length <= 24 && /^(Thinking\.\.\.|Writing\.\.\.|Generating\.\.\.)$/i.test(txt)) {
+                if (isElementVisible(leaf) && isInsideNotionAIChat(leaf)) {
+                    return true;
+                }
             }
         }
 
