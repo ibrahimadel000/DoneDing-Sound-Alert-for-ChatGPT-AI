@@ -1,4 +1,15 @@
 <p align="center">
+  <a href="https://shorturl.at/ekrE9">
+    <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcTYycTF2c21icXlzbnd5aWdtZTh2cTR3c21lMXlnaGxhdXFpMGZ4YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/j2pLp1o0K55qB7cTly/giphy.gif" width="24" height="24" style="vertical-align: middle;" alt="Click animation" />
+    <img src="https://img.shields.io/badge/Edge_Extension-👉_Click_Here_to_Install-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="Install Edge Extension" />
+  </a>
+  &nbsp;&nbsp;
+  <img src="https://img.shields.io/badge/Chrome_Extension-Coming_Soon_⏳-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Extension Coming Soon" />
+</p>
+
+---
+
+<p align="center">
   <img src="./doneding-hero.svg" alt="DoneDing AI completion alerts dashboard with active AI sessions" width="100%" />
 </p>
 
