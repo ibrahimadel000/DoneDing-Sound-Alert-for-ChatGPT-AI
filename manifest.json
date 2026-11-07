@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "DoneDing - Sound Alert for ChatGPT & AI",
+  "name": "DoneDing",
   "version": "8.1.0",
   "description": "Browser-wide top-bar completion banner, per-session distinct chimes, and system notifications for all AI chat websites.",
   "permissions": [
     "storage",
     "notifications",
     "offscreen",
-    "tabs"
+    "tabs",
+    "scripting"
   ],
   "host_permissions": [
     "<all_urls>"

@@ -228,15 +228,20 @@ async function playChimeCentral(preset, volume) {
     }
 }
 
-// Self-contained function injected into WHICHEVER browser tab the user is currently viewing (<all_urls>)
-// Renders the DoneDing Top-Bar Notification Banner across the whole browser (NO Replay button!)
+// Injected into whichever browser tab the user is viewing across the whole browser (<all_urls>)
+// Uses Shadow DOM + Safe DOM creation (Zero innerHTML so YouTube/Google TrustedTypes CSP NEVER blocks it!)
 function injectBrowserWideTopBanner(bannerPayload) {
     try {
-        const existing = document.getElementById('doneding-global-top-banner');
-        if (existing) existing.remove();
+        const existingHost = document.getElementById('doneding-banner-host');
+        if (existingHost) existingHost.remove();
+
+        const host = document.createElement('div');
+        host.id = 'doneding-banner-host';
+        host.style.cssText = 'all: initial; position: absolute; z-index: 2147483647;';
+
+        const shadow = host.attachShadow({ mode: 'open' });
 
         const bar = document.createElement('div');
-        bar.id = 'doneding-global-top-banner';
         bar.style.cssText = [
             'position: fixed',
             'top: 14px',
@@ -247,40 +252,82 @@ function injectBrowserWideTopBanner(bannerPayload) {
             'color: #F2EFE9',
             'border: 1px solid #3E3C38',
             'border-radius: 10px',
-            'padding: 9px 12px 9px 15px',
+            'padding: 8px 12px 8px 14px',
             'font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif',
             'font-size: 12.5px',
             'line-height: 1.35',
             'display: flex',
             'align-items: center',
             'gap: 12px',
-            'box-shadow: 0 14px 34px rgba(0,0,0,0.48), 0 2px 8px rgba(0,0,0,0.32)',
+            'box-shadow: 0 14px 34px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.35)',
             'opacity: 0',
             'cursor: pointer',
-            'transition: opacity 0.2s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s cubic-bezier(0.22, 1, 0.36, 1)'
+            'box-sizing: border-box',
+            'overflow: hidden',
+            'transition: opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1), transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)'
         ].join(';');
 
-        bar.innerHTML = `
-            <span style="position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:10px 0 0 10px;background:${bannerPayload.brandColor || '#E55A2B'};"></span>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div style="display:flex;flex-direction:column;gap:2px;">
-                <div style="display:flex;align-items:center;gap:7px;">
-                  <span style="font-weight:650;color:#F2EFE9;letter-spacing:-0.01em;">${bannerPayload.platformName} finished</span>
-                  <span style="font-size:11px;font-variant-numeric:tabular-nums;color:#26B860;background:rgba(38,184,96,0.15);padding:1px 6px;border-radius:4px;font-weight:600;">${bannerPayload.elapsedSec}s</span>
-                </div>
-                <div style="font-size:11px;color:#ABA59B;display:flex;align-items:center;gap:6px;">
-                  <span style="color:#E55A2B;font-weight:600;">♪ ${bannerPayload.soundDisplay}</span>
-                  <span>·</span>
-                  <span style="max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${bannerPayload.title || 'Response ready'}</span>
-                </div>
-              </div>
-            </div>
-            <button id="doneding-global-banner-close" title="Dismiss" style="background:transparent;color:#8A847A;border:none;border-radius:5px;padding:3px 6px;font-size:13px;cursor:pointer;line-height:1;margin-left:4px;">✕</button>
-        `;
+        // Left brand accent line
+        const accent = document.createElement('span');
+        accent.style.cssText = `position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: ${bannerPayload.brandColor || '#E55A2B'};`;
+        bar.appendChild(accent);
 
-        // Clicking the banner switches straight to the finished AI tab!
-        bar.addEventListener('click', (e) => {
-            if (e.target && e.target.id === 'doneding-global-banner-close') return;
+        // Body column
+        const bodyWrap = document.createElement('div');
+        bodyWrap.style.cssText = 'display: flex; flex-direction: column; gap: 2px;';
+
+        // Top line: Platform name + elapsed seconds
+        const topLine = document.createElement('div');
+        topLine.style.cssText = 'display: flex; align-items: center; gap: 7px;';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.style.cssText = 'font-weight: 650; color: #F2EFE9; letter-spacing: -0.01em;';
+        nameSpan.textContent = `${bannerPayload.platformName} finished`;
+
+        const timeSpan = document.createElement('span');
+        timeSpan.style.cssText = 'font-size: 10.5px; font-variant-numeric: tabular-nums; color: #26B860; background: rgba(38,184,96,0.15); padding: 1px 6px; border-radius: 4px; font-weight: 600;';
+        timeSpan.textContent = `${bannerPayload.elapsedSec}s`;
+
+        topLine.appendChild(nameSpan);
+        topLine.appendChild(timeSpan);
+        bodyWrap.appendChild(topLine);
+
+        // Subline: Sound tag + conversation title
+        const subLine = document.createElement('div');
+        subLine.style.cssText = 'display: flex; align-items: center; gap: 6px; font-size: 11px; color: #ABA59B;';
+
+        const soundSpan = document.createElement('span');
+        soundSpan.style.cssText = 'color: #E55A2B; font-weight: 600;';
+        soundSpan.textContent = `♪ ${bannerPayload.soundDisplay}`;
+
+        const dotSpan = document.createElement('span');
+        dotSpan.textContent = '·';
+
+        const titleSpan = document.createElement('span');
+        titleSpan.style.cssText = 'max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ABA59B;';
+        titleSpan.textContent = bannerPayload.title || 'Response ready';
+
+        subLine.appendChild(soundSpan);
+        subLine.appendChild(dotSpan);
+        subLine.appendChild(titleSpan);
+        bodyWrap.appendChild(subLine);
+        bar.appendChild(bodyWrap);
+
+        // Close button
+        const closeBtn = document.createElement('button');
+        closeBtn.title = 'Dismiss';
+        closeBtn.textContent = '✕';
+        closeBtn.style.cssText = 'background: transparent; color: #8A847A; border: none; border-radius: 4px; padding: 3px 6px; font-size: 13px; cursor: pointer; line-height: 1; margin-left: 6px;';
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            bar.style.opacity = '0';
+            bar.style.transform = 'translateX(-50%) translateY(-14px) scale(0.98)';
+            setTimeout(() => host.remove(), 240);
+        });
+        bar.appendChild(closeBtn);
+
+        // Click anywhere on banner to switch straight to the finished AI tab!
+        bar.addEventListener('click', () => {
             bar.style.opacity = '0';
             bar.style.transform = 'translateX(-50%) translateY(-14px) scale(0.98)';
             try {
@@ -292,31 +339,24 @@ function injectBrowserWideTopBanner(bannerPayload) {
                     });
                 }
             } catch (err) {}
+            setTimeout(() => host.remove(), 240);
         });
 
-        const closeBtn = bar.querySelector('#doneding-global-banner-close');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                bar.style.opacity = '0';
-                bar.style.transform = 'translateX(-50%) translateY(-14px) scale(0.98)';
-                setTimeout(() => bar.remove(), 220);
-            });
-        }
+        shadow.appendChild(bar);
+        document.documentElement.appendChild(host);
 
-        document.documentElement.appendChild(bar);
         requestAnimationFrame(() => {
             bar.style.opacity = '1';
             bar.style.transform = 'translateX(-50%) translateY(0) scale(1)';
         });
 
         setTimeout(() => {
-            if (bar && bar.parentNode) {
+            if (bar && host.parentNode) {
                 bar.style.opacity = '0';
                 bar.style.transform = 'translateX(-50%) translateY(-14px) scale(0.98)';
-                setTimeout(() => { if (bar.parentNode) bar.remove(); }, 250);
+                setTimeout(() => { if (host.parentNode) host.remove(); }, 260);
             }
-        }, 6000);
+        }, 6500);
     } catch (e) {}
 }
 
