@@ -1,18 +1,125 @@
-# DoneDing v8.0 — Whole-Browser AI Completion Monitor
-
-**DoneDing** monitors all your open AI chat tabs across Chrome simultaneously, plays a **customizable sound per session**, displays a **browser-wide Top-Bar Notification Banner on whichever tab you are currently viewing**, and triggers **native computer system notifications**.
+<p align="center">
+  <a href="https://shorturl.at/ekrE9">
+    <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcTYycTF2c21icXlzbnd5aWdtZTh2cTR3c21lMXlnaGxhdXFpMGZ4YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/j2pLp1o0K55qB7cTly/giphy.gif" width="24" height="24" style="vertical-align: middle;" alt="Click animation" />
+    <img src="https://img.shields.io/badge/Edge_Extension-👉_Click_Here_to_Install-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="Install Edge Extension" />
+  </a>
+  &nbsp;&nbsp;
+  <img src="https://img.shields.io/badge/Chrome_Extension-Coming_Soon_⏳-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Extension Coming Soon" />
+</p>
 
 ---
 
-## What's New in DoneDing v8.0
+<p align="center">
+  <img src="./doneding-hero.svg" alt="DoneDing AI completion alerts dashboard with active AI sessions" width="100%" />
+</p>
 
-1. **Whole-Browser Top-Bar Notification Banner (`<all_urls>`)**:
-   - When an AI chat finishes generating in the background while you are browsing another tab (like YouTube, GitHub, Docs, or X), DoneDing automatically injects the floating **Top-Bar Notification Banner** right at the top of the webpage you are currently viewing!
-   - Clicking the banner switches you straight back to the AI tab that finished.
-2. **Removed "Replay" & "Test" Buttons**:
-   - Removed the **Replay** button from the Top-Bar Notification Banner (both in-page and inside the popup) and removed the **Test Computer Alert** button from **Trigger Settings** for a cleaner interface.
-3. **Completely Independent Sound & Visual Banner Toggles**:
-   - Fixed an `offscreen.js` message-channel race condition and decoupled `Play completion sound` from `Top-bar notification banner`.
-   - Unchecking **Play completion sound** now silences only the chime while the Top-bar notification banner continues to appear normally, and re-checking it restores the chime immediately.
-4. **Embedded Base64 Icon for Computer System Notifications**:
-   - Uses an inline Base64 PNG Data URI (`data:image/png;base64,...`) inside `chrome.notifications.create` so OS notifications never fail due to service worker path resolution.
+<h1 align="center">DoneDing</h1>
+
+<p align="center">
+  <strong>Keep working. Hear the ding. Return when AI is ready.</strong><br />
+  A Chrome extension that monitors supported AI conversations across your open tabs and alerts you when a response finishes.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Chrome-Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome extension" />
+  <img src="https://img.shields.io/badge/Manifest-V3-6857D5?style=for-the-badge" alt="Manifest V3" />
+  <img src="https://img.shields.io/badge/AI%20sites-27-23A78B?style=for-the-badge" alt="27 AI site integrations" />
+  <img src="https://img.shields.io/badge/Current%20version-8.1.0-F3A847?style=for-the-badge" alt="Version 8.1.0" />
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> ·
+  <a href="#supported-ai-sites">Supported AI sites</a> ·
+  <a href="#get-started">Get started</a> ·
+  <a href="#privacy--permissions">Privacy &amp; permissions</a> ·
+  <a href="#troubleshooting">Troubleshooting</a>
+</p>
+
+---
+
+## The problem
+
+You send a long prompt, switch tabs, then keep coming back to see if the AI has finished. DoneDing watches supported AI conversations in the background and lets you know when they are ready—so you can stay focused on what you were doing.
+
+## Features
+
+| Feature | What it does |
+| --- | --- |
+| **Multi-tab monitoring** | Tracks supported AI conversations across open Chrome tabs. |
+| **Distinct sounds** | Choose from six chimes and assign sounds to a site or individual tab. |
+| **Browser-wide banner** | See which AI finished while browsing another page, then jump back to its tab. |
+| **Desktop alerts** | Get an optional Chrome/operating-system notification. |
+| **Choose when to alert** | Enable or disable sounds, the banner, and desktop notifications independently. |
+| **Background-tab mode** | Alert only when you are away from the AI tab or window. |
+| **Recent completions** | See recent alerts and your completion count in the popup. |
+| **No DoneDing login** | The current version does not require a DoneDing account. |
+
+## Supported AI sites
+
+DoneDing currently targets 27 AI services:
+
+**ChatGPT · Claude · Google Gemini · Google AI Studio · NotebookLM · Notion AI · DeepSeek · Perplexity · Microsoft Copilot · Grok · Poe · Mistral Le Chat · Qwen Chat · Kimi · HuggingChat · Meta AI · Phind · You.com · Cohere Coral · Vercel v0 · Bolt.new · Lovable · Replit AI · Character.AI · Pi AI · Duck.ai · Blackbox AI**
+
+AI services can change their websites without notice, which may temporarily affect completion detection. If a site stops working, please report it with the service name and a short description of the issue.
+
+## Get started
+
+### Chrome Web Store
+
+**Listing:** Coming soon.
+
+### Try it from source
+
+1. Download or clone this repository.
+2. Open `chrome://extensions` in Chrome.
+3. Turn on **Developer mode**.
+4. Select **Load unpacked** and choose the DoneDing project folder.
+5. Open or refresh a supported AI site and start a conversation.
+6. Open the DoneDing popup to review active sessions and adjust your alerts.
+
+Keep the AI conversation tab open. When the response finishes, DoneDing will show the alerts you have enabled. Source-installed copies must be updated manually; Chrome Web Store installations receive published updates through Chrome.
+
+## Privacy & permissions
+
+DoneDing does not require a DoneDing account. Its page scripts monitor supported AI sites for response activity and send the site name, tab title, and completion status to the extension's background service worker so it can coordinate alerts.
+
+Settings and recent-completion details are stored with Chrome's `storage.sync`. This can include the AI site, tab title, sound choice, and completion timing. Chrome may sync this information across your Chrome browsers if Chrome Sync is enabled. Recent completions can be cleared from the popup.
+
+DoneDing requests the following permissions:
+
+| Permission | Purpose |
+| --- | --- |
+| `storage` | Save settings and recent-completion details with Chrome. |
+| `notifications` | Show optional desktop notifications. |
+| `offscreen` | Play a sound when the AI tab is in the background. |
+| `tabs` | Track supported AI tabs and return you to a completed conversation. |
+| `scripting` | Refresh detection in supported tabs when needed. |
+| `<all_urls>` host access | Show the browser-wide banner on the page you are currently viewing, even when it is not an AI site. |
+
+The completion-detection scripts are configured for the supported AI sites listed above. The broad host permission is used for the cross-tab banner feature; review Chrome's permission prompt and install only if you are comfortable with that access.
+
+## Troubleshooting
+
+- **No alert?** Make sure DoneDing is enabled and the conversation appears under **Open Sessions**.
+- **The AI tab was already open?** Refresh it after installing or updating DoneDing.
+- **No desktop notification?** Check Chrome's notification permission and your operating system's notification settings.
+- **A site stopped working?** The service may have changed its interface. [Open an issue](https://github.com/ibrahimadel000/DoneDing-Sound-Alert-for-ChatGPT-AI/issues) with the site name and what happened.
+
+## Project details
+
+- **Current manifest version:** `8.1.0`
+- **Browser:** Google Chrome (Manifest V3)
+- **Price:** Free for the current release
+- **Chrome Web Store listing:** Coming soon
+
+## Acknowledgements
+
+- <b>Special thanks:</b> [Khalil AL-Rahman Moftah](https://github.com/moftahykh) (<code>@moftahykh</code>) for helping me with this project. ❤️
+
+## License
+
+This repository does not currently include a `LICENSE` file. Add a license before inviting others to reuse or redistribute the code.
+
+---
+
+<p align="center"><sub>DoneDing · Stay focused. Get notified. Get back to it.</sub></p>
